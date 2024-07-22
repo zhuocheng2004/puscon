@@ -1,0 +1,46 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <puscon/puscon.h>
+
+static int parse_options(puscon_config* config, int argc, char *argv[]) {
+	/* reset pointers to NULL */
+	bzero(config, sizeof(puscon_config));
+
+	if (argc <= 1)
+		return 1;
+	
+	config->kernel_filename = argv[1];
+
+	return 0;
+}
+
+static void usage(const char* prog_name) {
+	if (!prog_name)
+		prog_name = "puscon-cli";
+	fprintf(stderr, "Usage: %s <kernel_filename>\n", prog_name);
+}
+
+int main(int argc, char *argv[]) {
+	/* parse options */
+	puscon_config config;
+	int option_error = parse_options(&config, argc, argv);
+
+	if (option_error) {
+		fprintf(stderr, "Error: failed to parse options\n");
+	} else if (!config.kernel_filename) {
+		fprintf(stderr, "Error: no kernel specified\n");
+		option_error = 1;
+	}
+
+	if (option_error) {
+		usage(argv[0]);
+		return 1;
+	}
+
+	int err = puscon_main(&config);
+
+	return err;
+}
