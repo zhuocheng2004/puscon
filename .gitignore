@@ -5,6 +5,7 @@ build/
 *.bin
 *.out
 *.o
+*.so
 .tmp*
 
 .vscode/
