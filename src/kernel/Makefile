@@ -1,5 +1,5 @@
 
-OBJS	:= start.o main.o
+OBJS	:= start.o main.o lib_asm.o
 
 .PHONY: all
 all: kernel

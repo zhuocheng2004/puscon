@@ -12,9 +12,11 @@
 
 /* custom syscalls */
 #define		SYS_puscon_base			0x1000
-#define		SYS_puscon_exit_init		SYS_puscon_base + 0
-#define		SYS_puscon_bypass_enable	SYS_puscon_base + 1
-#define		SYS_puscon_bypass_disable	SYS_puscon_base + 2
+#define		SYS_puscon_nop			SYS_puscon_base + 0
+#define		SYS_puscon_kernel_enter		SYS_puscon_base + 1
+#define		SYS_puscon_kernel_exit		SYS_puscon_base + 2
+#define		SYS_puscon_bypass_enable	SYS_puscon_base + 3
+#define		SYS_puscon_bypass_disable	SYS_puscon_base + 4
 
 /*
  * Type Definitions
@@ -39,17 +41,11 @@ typedef struct task_info {
 	 * flags
 	 */
 
-	/* whether the thread is in init phase; during init, syscalls bypass */
-	u32		initialized : 1;
+	/* wether we are in kernel mode */
+	u32		kernel : 1;
 
 	/* whether syscalls should bypass */
 	u32		bypass : 1;
-
-	/* whether the task is performing a real syscall */
-	u32		in_syscall : 1;
-
-	/* whether the task is skipping a syscall */
-	u32		skipping : 1;
 } task_info;
 
 /*
@@ -59,6 +55,8 @@ typedef struct puscon_context {
 	puscon_config*	config;
 
 	task_info*	entry_task;
+
+	int 		should_stop;
 }  puscon_context;
 
 /*

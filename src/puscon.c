@@ -26,7 +26,11 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 		return 1;
 
 	entry_task->pid = 1;
+	entry_task->kernel = 1;
+	entry_task->bypass = 1;
 	context->entry_task = entry_task;
+
+	context->should_stop = 0;
 
 	return 0;
 }
@@ -99,6 +103,8 @@ int puscon_main(puscon_config* config) {
 		return err;
 	}
 
+	fprintf(stderr, "Starting...\n");
+
 	err = puscon_start(&context);
 	if (err) {
 		fprintf(stderr, "Error: failed to start process.\n");
@@ -117,58 +123,76 @@ int puscon_main(puscon_config* config) {
 		}
 		if (WIFSTOPPED(child_status)) {
 			int sig = WSTOPSIG(child_status);
-			if (sig == SIGTRAP) {
-				task_info *task = context.entry_task;
-				struct user_regs_struct regs;
-				ptrace(PTRACE_GETREGS, child_pid, 0, &regs);
-				u64 syscall = regs.orig_rax;
 
-				if (!task->skipping) {
+			switch (sig) {
+				case SIGTRAP:
+					task_info *task = context.entry_task;
+					struct user_regs_struct regs;
+					ptrace(PTRACE_GETREGS, child_pid, 0, &regs);
+					u64 syscall = regs.orig_rax;
+
 					switch (syscall) {
-					case SYS_puscon_exit_init:
-						skip_syscall(child_pid, &regs);
-						task->skipping = 1;
-						break;
-					default:
-						if (task->initialized && !task->bypass) {
-							err = puscon_syscall_handle(&context, child_pid);
-							if (err) {
-								fprintf(stderr, "Error: failed to handle syscall (%lld).\n", syscall);
+						case SYS_puscon_nop:
+							ptrace(task->kernel && task->bypass ? PTRACE_SYSCALL : PTRACE_SYSEMU, child_pid, NULL, NULL);
+							break;
+						case SYS_puscon_kernel_enter:
+							fprintf(stderr, "Entering kernel mode.\n");
+							task->kernel = 1;
+							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							break;
+						case SYS_puscon_kernel_exit:
+							fprintf(stderr, "Exiting kernel mode.\n");
+							task->kernel = 0;
+							task->bypass = 0;
+							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							break;
+						case SYS_puscon_bypass_enable:
+							if (!task->kernel) {
+								fprintf(stderr, "Error: can only bypass in kernel mode.\n");
+								err = 1;
 								break;
 							}
-						}
+							fprintf(stderr, "Enabling bypassing.\n");
+							task->bypass = 1;
+							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							break;
+						case SYS_puscon_bypass_disable:
+							fprintf(stderr, "Disabling bypassing.\n");
+							task->bypass = 0;
+							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							break;
+						default:
+							if (task->kernel && task->bypass) {
+								fprintf(stderr, "Bypassing: syscall %lld.\n", syscall);
+								ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+							} else {
+								err = puscon_syscall_handle(&context, child_pid);
+								if (err) {
+									fprintf(stderr, "Error: failed to handle syscall (%lld).\n", syscall);
+									break;
+								}
+								ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							}
 					}
-				} else {
-					task->skipping = 0;
-				}
-
-				switch (syscall)
-				{
-				case SYS_puscon_exit_init:
-					ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
-					task->initialized = 1;
+					break;
+				case SIGSEGV:
+					fprintf(stderr, "Error: child (pid=%d) Segmentation Fault.\n", child_pid);
+					err = 1;
 					break;
 				default:
-					if (task->initialized && !task->bypass) {
-						err = puscon_syscall_handle(&context, child_pid);
-						if (err) {
-							fprintf(stderr, "Error: failed to handle syscall (%lld).\n", syscall);
-							break;
-						}
-						ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
-					} else {
-						ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
-					}
-				}
+					fprintf(stderr, "Error: unhandled signal: %d \n", sig);
+					err = 1;
 			}
 
-			if (err) {
+			if (err || context.should_stop) {
 				break;
 			}
 		}
 	}
 
 	puscon_context_destroy(&context);
+
+	fprintf(stderr, "Finished.\n");
 
 	return err;
 }

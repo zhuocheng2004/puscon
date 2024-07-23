@@ -1,4 +1,4 @@
 
-void* kernel_main() {
+void* kernel_start() {
 	return 0;
 }
