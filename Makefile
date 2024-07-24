@@ -42,6 +42,6 @@ clean:
 
 .PHONY: run
 run: puscon-cli kernel
-	./src/main/puscon ./src/kernel/kernel
+	./src/main/puscon ./src/kernel/kernel /bin/ls
 
 FORCE:

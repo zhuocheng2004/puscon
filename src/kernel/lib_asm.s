@@ -22,9 +22,6 @@ bypass_enable:
 	push	%rax
 	mov	$0x1003, %rax
 	syscall
-	# need this dummy empty syscall to truly enable bypassing
-	mov	$0x1000, %rax
-	syscall
 	pop	%rax
 	ret
 

@@ -2,7 +2,7 @@
 	.section	.text
 	.globl		_start
 _start:
-	call	kernel_start
+	call	kernel_main
 
 	# disable bypassing
 	call	bypass_disable

@@ -6,28 +6,31 @@
 
 int test_simple() {
 	puscon_idmap idmap;
-	int err, id;
 
-	err = puscon_idmap_init(&idmap, 5);
-	if (err) {
-		puts("Failed to init idmap.");
-		return err;
+	if (puscon_idmap_init(&idmap, 5)) {
+		fprintf(stderr, "Failed to init idmap.");
+		return 1;
 	}
 
 	assert(idmap.capacity_shift == 5);
 	assert(idmap.capacity == 32);
+	assert(puscon_idmap_occupied(&idmap) == 0);
+;
+	assert(puscon_idmap_alloc(&idmap) == 0);
+	assert(puscon_idmap_alloc(&idmap) == 1);
+	assert(puscon_idmap_alloc(&idmap) == 2);
 
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 0);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 1);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 2);
+	assert(puscon_idmap_occupied(&idmap) == 3);
 
-	err = puscon_idmap_free(&idmap, 1);
-	assert(err == 0);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 3);
+	assert(puscon_idmap_free(&idmap, 1) == 0);
+	assert(puscon_idmap_alloc(&idmap) == 3);
+
+	assert(puscon_idmap_free(&idmap, 0) == 0);
+	//assert(puscon_idmap_free(&idmap, 1) == 0);
+	assert(puscon_idmap_free(&idmap, 2) == 0);
+	assert(puscon_idmap_free(&idmap, 3) == 0);
+	
+	assert(puscon_idmap_occupied(&idmap) == 0);
 
 	puscon_idmap_destroy(&idmap);
 
@@ -36,42 +39,29 @@ int test_simple() {
 
 int test_wrap() {
 	puscon_idmap idmap;
-	int err, id;
 
-	err = puscon_idmap_init(&idmap, 5);
-	if (err) {
-		puts("Failed to init idmap.");
-		return err;
+	if (puscon_idmap_init(&idmap, 5)) {
+		fprintf(stderr, "Failed to init idmap.");
+		return 1;
 	}
 
 	for (int i = 0; i < 32; i++) {
-		id = puscon_idmap_alloc(&idmap);
-		assert(id == i);
+		assert(puscon_idmap_alloc(&idmap) == i);
 	}
 
 	/* should have no free ids */
-	id = puscon_idmap_alloc(&idmap);
-	assert(id < 0);
+	assert(puscon_idmap_alloc(&idmap) < 0);
 
-	err = puscon_idmap_free(&idmap, 2);
-	assert(err == 0);
-	err = puscon_idmap_free(&idmap, 3);
-	assert(err == 0);
-	err = puscon_idmap_free(&idmap, 5);
-	assert(err == 0);
-	err = puscon_idmap_free(&idmap, 7);
-	assert(err == 0);
+	assert(puscon_idmap_free(&idmap, 2) == 0);
+	assert(puscon_idmap_free(&idmap, 3) == 0);
+	assert(puscon_idmap_free(&idmap, 5) == 0);
+	assert(puscon_idmap_free(&idmap, 7) == 0);
 
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 2);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 3);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 5);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id == 7);
-	id = puscon_idmap_alloc(&idmap);
-	assert(id < 0);
+	assert(puscon_idmap_alloc(&idmap) == 2);
+	assert(puscon_idmap_alloc(&idmap) == 3);
+	assert(puscon_idmap_alloc(&idmap) == 5);
+	assert(puscon_idmap_alloc(&idmap) == 7);
+	assert(puscon_idmap_alloc(&idmap) < 0);
 
 	puscon_idmap_destroy(&idmap);
 

@@ -24,4 +24,9 @@ void puscon_idmap_destroy(puscon_idmap *idmap);
 s32 puscon_idmap_alloc(puscon_idmap* idmap);
 int puscon_idmap_free(puscon_idmap* idmap, u32 id);
 
+/**
+ * @return >=0: number of occupied slots, <0: error
+ */
+s32 puscon_idmap_occupied(puscon_idmap* idmap);
+
 #endif

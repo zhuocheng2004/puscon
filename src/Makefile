@@ -2,7 +2,7 @@
 .PHONY: all
 all: libpuscon.a util/libpuscon-util.a
 
-libpuscon.a: puscon.o syscall.o
+libpuscon.a: puscon.o syscall.o printk.o
 	ar rcs $@ $^
 
 util/libpuscon-util.a: FORCE

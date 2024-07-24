@@ -87,3 +87,21 @@ int puscon_idmap_free(puscon_idmap* idmap, u32 id) {
 
 	return 0;
 }
+
+int puscon_idmap_occupied(puscon_idmap* idmap) {
+	if (!idmap || !idmap->free_map) {
+		fprintf(stderr, "Error: bad idmap\n");
+		return -1;
+	}
+
+	u32 capacity = idmap->capacity;
+	u8* free_map = idmap->free_map;
+
+	s32 cnt = 0;
+	for (int i = 0; i < capacity; i++) {
+		if (free_map[i])
+			cnt++;
+	}
+
+	return cnt;
+}
