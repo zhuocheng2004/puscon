@@ -42,6 +42,6 @@ clean:
 
 .PHONY: run
 run: puscon-cli kernel
-	./src/main/puscon ./src/kernel/kernel /bin/ls
+	./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel /bin/ls
 
 FORCE:

@@ -37,6 +37,9 @@
 #define		KERN_INFO		KERN_SOH "6"
 #define		KERN_DEBUG		KERN_SOH "7"
 
+#define SYSCALL(nr)	\
+	asm("push rax; mov $" #nr " %rax; pop rax;")
+
 /*
  * Type Definitions
  */
@@ -50,6 +53,10 @@ typedef struct puscon_config {
 
 	/* filename of the entry program */
 	char*		entry_filename;
+
+	int		entry_argc;
+
+	char**		entry_argv;
 } puscon_config;
 
 /*

@@ -1,2 +1,6 @@
 
 logs/
+
+.tmp*
+*.elf*
+*.exe

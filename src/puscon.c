@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -96,7 +97,7 @@ int puscon_start(puscon_context* context) {
 	if (child_pid == 0) {
 		/* child */
 		char* argv[] = {
-			config->kernel_filename, NULL,
+			config->kernel_filename, config->entry_filename, NULL
 		};
 
 		char* env[] = {
@@ -129,6 +130,31 @@ int puscon_start(puscon_context* context) {
 	return 0;
 }
 
+static char* get_args_string(int argc, char* argv[]) {
+	int end = 0;
+	for (int i = 0; i < argc; i++)
+		end = end + strlen(argv[i]) + 4;
+	if (end > 0)
+		end -= 2;
+
+	if (end == 0)
+		return NULL;
+
+	char* s = malloc(end + 4);
+	char* cur = s;
+	for (int i = 0; i < argc; i++) {
+		*cur = '\"'; cur++;
+		char* arg = argv[i];
+		strcpy(cur, arg); cur += strlen(arg);
+		*cur = '\"'; cur++;
+		*cur = ','; cur++;
+		*cur = ' '; cur++;
+	}
+	s[end] = '\0';
+
+	return s;
+}
+
 int puscon_main(puscon_config* config) {
 	int err;
 
@@ -139,7 +165,9 @@ int puscon_main(puscon_config* config) {
 		return err;
 	}
 
-	puscon_printk(KERN_INFO "Starting Puscon with kernel=%s, entry=%s.\n", config->kernel_filename, config->entry_filename);
+	char* arg_str = get_args_string(config->entry_argc, config->entry_argv);
+	puscon_printk(KERN_INFO "Starting Puscon with kernel=\"%s\", entry=\"%s\", args=[%s].\n", config->kernel_filename, config->entry_filename, arg_str ? arg_str : "");
+	free(arg_str);
 
 	err = puscon_start(&context);
 	if (err) {
