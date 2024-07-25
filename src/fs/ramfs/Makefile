@@ -1,8 +1,8 @@
 
 .PHONY: all
-all: libpuscon-util.o
+all: libpuscon-ramfs.o
 
-libpuscon-util.o: idmap.o
+libpuscon-ramfs.o: inode.o
 	${LD} -r -o $@ $^
 
 %.o: %.c

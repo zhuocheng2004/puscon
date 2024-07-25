@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <puscon/fs.h>
 #include <puscon/puscon.h>
 
 int puscon_context_init(puscon_context* context, puscon_config* config) {
@@ -47,6 +48,15 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 	context->task_context.tasks.ptrs[1] = entry_task;
 
 	context->should_stop = 1;
+
+	if (puscon_init_ramfs_fs()) {
+		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"ramfs\".\n");
+		goto err_free_pidmap;
+	}
+	if (puscon_bypass_fs_init()) {
+		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"bypass\".\n");
+		goto err_free_pidmap;
+	}
 
 	return 0;
 
@@ -105,6 +115,7 @@ int puscon_start(puscon_context* context) {
 		};
 
 		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+		raise(SIGSTOP);
 		int err = execve(config->kernel_filename, argv, NULL);
 		if (err) {
 			puscon_printk(KERN_EMERG "Error: failed to exec %s.\n", config->kernel_filename);
@@ -113,7 +124,7 @@ int puscon_start(puscon_context* context) {
 	}
 
 	/* parent */
-	ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL);
+	ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC);
 
 	puscon_task_info *entry_task = context->task_context.entry_task;
 	entry_task->host_pid = child_pid;
@@ -126,6 +137,11 @@ int puscon_start(puscon_context* context) {
 	context->task_context.pid_map[child_pid] = 1;
 
 	context->should_stop = 0;
+
+	waitpid(child_pid, NULL, __WALL);
+	puscon_printk(KERN_INFO "Tracee (pid=1, host_pid=%d) is now under control.\n", child_pid);
+
+	ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 
 	return 0;
 }
@@ -178,14 +194,15 @@ int puscon_main(puscon_config* config) {
 	pid_t child_pid;
 	int child_status;
 
+
 	while (1) {
+		err = 0;
 		child_pid = wait(&child_status);
 		if (WIFEXITED(child_status)) {
 			if (WEXITSTATUS(child_status))
 				err = 1;
 			break;
-		}
-		if (WIFSTOPPED(child_status)) {
+		} else if (WIFSTOPPED(child_status)) {
 			int sig = WSTOPSIG(child_status);
 
 			switch (sig) {
@@ -195,56 +212,68 @@ int puscon_main(puscon_config* config) {
 					ptrace(PTRACE_GETREGS, child_pid, 0, &regs);
 					u64 syscall = regs.orig_rax;
 
+					u32 pid = context.task_context.pid_map[child_pid];
+					if (pid == 0) {
+						puscon_printk(KERN_EMERG "Error: cannot find child with host pid %d.\n", child_pid);
+						err = 1;
+						break;
+					}
+
 					switch (syscall) {
 						case SYS_puscon_nop:
-							ptrace(task->kernel && task->bypass ? PTRACE_SYSCALL : PTRACE_SYSEMU, child_pid, NULL, NULL);
+							skip_syscall(child_pid);
 							break;
 						case SYS_puscon_kernel_enter:
-							puscon_printk(KERN_DEBUG "Entering kernel mode.\n");
+							puscon_printk(KERN_DEBUG "[PID %d] Entering kernel mode.\n", pid);
 							task->kernel = 1;
-							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							skip_syscall(child_pid);
 							break;
 						case SYS_puscon_kernel_exit:
-							puscon_printk(KERN_DEBUG "Exiting kernel mode.\n");
+							puscon_printk(KERN_DEBUG "[PID %d] Exiting kernel mode.\n", pid);
 							task->kernel = 0;
 							task->bypass = 0;
-							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							skip_syscall(child_pid);
 							break;
 						case SYS_puscon_bypass_enable:
 							if (!task->kernel) {
-								puscon_printk(KERN_EMERG "Error: can only bypass in kernel mode.\n");
+								puscon_printk(KERN_EMERG "[PID %d] Error: can only bypass in kernel mode.\n", pid);
 								err = 1;
 								break;
 							}
-							puscon_printk(KERN_DEBUG "Enabling bypassing.\n");
+							puscon_printk(KERN_DEBUG "[PID %d] Enabling bypassing.\n", pid);
 							task->bypass = 1;
-							ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+							skip_syscall(child_pid);
 							break;
 						case SYS_puscon_bypass_disable:
-							puscon_printk(KERN_DEBUG "Disabling bypassing.\n");
+							puscon_printk(KERN_DEBUG "[PID %d] Disabling bypassing.\n", pid);
 							task->bypass = 0;
-							ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
+							skip_syscall(child_pid);
+							break;
+						case SYS_puscon_set_syscall_entry:
+							u64 syscall_entry = regs.rdi;
+							puscon_printk(KERN_INFO "[PID %d] Syscall entry set to 0x%llx.\n", pid, syscall_entry);
+							task->syscall_entry = syscall_entry;
+							skip_syscall(child_pid);
 							break;
 						default:
 							if (task->kernel && task->bypass) {
-								puscon_printk(KERN_DEBUG "Bypassing: syscall %lld.\n", syscall);
-								ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+								puscon_printk(KERN_DEBUG "[PID %d] Bypassing: syscall %lld.\n", pid, syscall);
 							} else {
 								err = puscon_syscall_handle(&context, child_pid);
 								if (err) {
-									puscon_printk(KERN_EMERG "Error: failed to handle syscall (%lld).\n", syscall);
-									break;
+									puscon_printk(KERN_EMERG "[PID %d] Error: failed to handle syscall (nr=%lld).\n", pid, syscall);
 								}
-								ptrace(PTRACE_SYSEMU, child_pid, NULL, NULL);
 							}
 					}
+					if (!err)
+						ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 					break;
 				case SIGSEGV:
-					puscon_printk(KERN_EMERG "Error: child (host_pid=%d) Segmentation Fault.\n", child_pid);
+					puscon_printk(KERN_EMERG "[PID %d] Error: child (host_pid=%d) Segmentation Fault.\n", pid, child_pid);
 					err = 1;
 					break;
 				default:
-					puscon_printk(KERN_EMERG "Error: unhandled signal: %d \n", sig);
+					puscon_printk(KERN_EMERG "[PID %d] Error: unhandled signal: %d \n", pid, sig);
 					err = 1;
 			}
 
@@ -256,7 +285,7 @@ int puscon_main(puscon_config* config) {
 
 	puscon_context_destroy(&context);
 
-	puscon_printk(KERN_INFO "Puscon Finished.\n");
+	puscon_printk(KERN_INFO "Puscon Exited.\n");
 
 	return err;
 }

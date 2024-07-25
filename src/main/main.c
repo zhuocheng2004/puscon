@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <puscon/puscon.h>
+#include <puscon/version.h>
 
 
 static void usage(const char* prog_name) {
@@ -18,7 +19,7 @@ static void usage(const char* prog_name) {
 }
 
 static void version() {
-	fprintf(stderr, "Puscon Version TODO\n");
+	fprintf(stderr, "puscon " PUSCON_VERSION_STRING "\n");
 }
 
 static int parse_options(puscon_config* config, int argc, char *argv[]) {

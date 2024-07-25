@@ -30,7 +30,7 @@ kernel: FORCE
 	${MAKE} -C src/kernel/
 
 .PHONY: test
-test: libpuscon puscon-cli FORCE
+test: libpuscon puscon-cli kernel FORCE
 	${MAKE} -C test/
 
 .PHONY: clean
@@ -42,6 +42,6 @@ clean:
 
 .PHONY: run
 run: puscon-cli kernel
-	./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel /bin/ls
+	./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel ./test/test_load_static.elf
 
 FORCE:

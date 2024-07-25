@@ -22,7 +22,7 @@ test_load_static.elf: test_load_static.o
 	@if grep F .tmp_pf > /dev/null; then cat $(LOG_DIR)/$<.txt; fi;
 	@echo "\033[0m"
 
-%.run_test: test_%.elf ../src/main/puscon ../src/kernel/kernel
+%.run_test: test_%.elf
 	@mkdir -p $(LOG_DIR)
 	@echo ">>>> $@"
 	-@if ../src/main/puscon ../src/kernel/kernel $^ > $(LOG_DIR)/$<.txt 2>&1; then echo "P" > .tmp_pf; else echo "F" > .tmp_pf; fi;
@@ -44,6 +44,6 @@ test_load_static.elf: test_load_static.o
 
 .PHONY: clean
 clean:
-	rm -rf $(LOG_DIR)
-	rm -rf .tmp*
-	rm -rf *.exe *.o
+	@rm -rf $(LOG_DIR)
+	@rm -rf .tmp*
+	@rm -rf *.exe *.o

@@ -1,8 +1,9 @@
 
-.PHONY: all
-all: libpuscon-util.o
 
-libpuscon-util.o: idmap.o
+.PHONY: all
+all: libpuscon-bypass.o
+
+libpuscon-bypass.o: inode.o
 	${LD} -r -o $@ $^
 
 %.o: %.c

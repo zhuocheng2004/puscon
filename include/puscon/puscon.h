@@ -2,10 +2,12 @@
 #define PUSCON_PUSCON_H
 
 #include <stdarg.h>
+#include <sys/ptrace.h>
+#include <sys/types.h>
 #include <sys/user.h>
 
+#include <puscon/task.h>
 #include <puscon/types.h>
-#include <puscon/util.h>
 
 
 /*
@@ -19,6 +21,7 @@
 #define		SYS_puscon_kernel_exit		SYS_puscon_base + 2
 #define		SYS_puscon_bypass_enable	SYS_puscon_base + 3
 #define		SYS_puscon_bypass_disable	SYS_puscon_base + 4
+#define		SYS_puscon_set_syscall_entry	SYS_puscon_base + 5
 
 #define		HOST_PID_MAX_SHIFT	22
 #define		PID_MAX_SHIFT		16
@@ -37,8 +40,6 @@
 #define		KERN_INFO		KERN_SOH "6"
 #define		KERN_DEBUG		KERN_SOH "7"
 
-#define SYSCALL(nr)	\
-	asm("push rax; mov $" #nr " %rax; pop rax;")
 
 /*
  * Type Definitions
@@ -58,39 +59,6 @@ typedef struct puscon_config {
 
 	char**		entry_argv;
 } puscon_config;
-
-/*
- * informational about each thread
- */
-typedef struct puscon_task_info {
-	/* virtual pid */
-	u32		pid;
-
-	/* host pid */
-	u32		host_pid;
-
-	/* 
-	 * flags
-	 */
-
-	/* whether we are in kernel mode */
-	u32		kernel : 1;
-
-	/* whether syscalls should bypass */
-	u32		bypass : 1;
-} puscon_task_info;
-
-/*
- * task management context
- */
-typedef struct puscon_task_context {
-	puscon_task_info*	entry_task;
-
-	puscon_idmap	tasks;
-
-	/* map: real host pid -> virtual pid */
-	u32*		pid_map;
-} puscon_task_context;
 
 /*
  * an instance of puscon simulation environment
@@ -116,6 +84,14 @@ extern int puscon_printk_use_ansi_color;
 int puscon_main(puscon_config* config);
 
 int puscon_syscall_handle(puscon_context* context, pid_t child_pid);
+
+void skip_syscall(pid_t child_pid);
+
+/*
+ * execute the syscall by the child task
+ */
+int puscon_child_syscall6(puscon_context* context, puscon_task_info* task, u64* ret,
+	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5);
 
 int puscon_vprintk(const char *fmt, va_list args);
 int puscon_printk(const char *fmt, ...);

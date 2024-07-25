@@ -3,6 +3,7 @@ build/
 
 *.a
 *.bin
+*.dep
 *.out
 *.o
 *.so

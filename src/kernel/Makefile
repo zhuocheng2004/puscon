@@ -1,10 +1,10 @@
 
-OBJS	:= start.o main.o lib_asm.o
+OBJS	:= start.o main.o
 
 .PHONY: all
 all: kernel
 
-kernel: link.ld  ${OBJS}
+kernel: link.ld ${OBJS}
 	${LD} -static -pie --no-dynamic-linker -o $@ -T link.ld ${OBJS}
 
 %.o: %.s
@@ -15,4 +15,4 @@ kernel: link.ld  ${OBJS}
 
 .PHONY: clean
 clean:
-	rm -rf kernel ${OBJS}
+	@rm -rf kernel ${OBJS}
