@@ -3,7 +3,8 @@
 .PHONY: all
 all: libpuscon-fs.o
 
-libpuscon-fs.o: filesystems.o bypass/libpuscon-bypass.o ramfs/libpuscon-ramfs.o
+libpuscon-fs.o: dcache.o filesystems.o inode.o super.o \
+		bypass/libpuscon-bypass.o ramfs/libpuscon-ramfs.o
 	${LD} -r -o $@ $^
 
 bypass/libpuscon-bypass.o: FORCE

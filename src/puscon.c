@@ -12,6 +12,20 @@
 #include <puscon/fs.h>
 #include <puscon/puscon.h>
 
+int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
+	if (puscon_init_ramfs_fs()) {
+		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"ramfs\".\n");
+		return 1;
+	}
+
+	if (puscon_bypass_fs_init()) {
+		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"bypass\".\n");
+		return 1;
+	}
+
+	return 0;
+}
+
 int puscon_context_init(puscon_context* context, puscon_config* config) {
 	if (!context) {
 		puscon_printk(KERN_EMERG "Error: bad context.\n");
@@ -35,7 +49,7 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 		goto err_destroy_tasks;
 	}
 
-	puscon_task_info *entry_task = calloc(sizeof(puscon_task_info), 1);
+	puscon_task_info *entry_task = calloc(1, sizeof(puscon_task_info));
 	if (!entry_task)
 		goto err_free_pidmap;
 
@@ -49,12 +63,8 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 
 	context->should_stop = 1;
 
-	if (puscon_init_ramfs_fs()) {
-		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"ramfs\".\n");
-		goto err_free_pidmap;
-	}
-	if (puscon_bypass_fs_init()) {
-		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"bypass\".\n");
+	if (puscon_context_init_fs(context, config)) {
+		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem.\n");
 		goto err_free_pidmap;
 	}
 

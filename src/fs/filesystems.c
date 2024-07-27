@@ -5,7 +5,16 @@
 #include <puscon/fs.h>
 #include <puscon/puscon.h>
 
+
 static puscon_file_system_type* files_systems = NULL;
+
+
+/* WARNING: This can be used only if we _already_ own a reference */
+puscon_file_system_type* puscon_get_filesystem(puscon_file_system_type* fs) {
+	return fs;
+}
+
+void puscon_put_filesystem(puscon_file_system_type* fs) { }
 
 static puscon_file_system_type** find_filesystem(const char* name, unsigned len) {
 	puscon_file_system_type **p;

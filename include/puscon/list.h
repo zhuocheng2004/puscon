@@ -29,8 +29,7 @@
  * Initializes the list_head to point to itself.  If it is a list header,
  * the result is an empty list.
  */
-static inline void INIT_LIST_HEAD(list_head* list)
-{
+static inline void INIT_LIST_HEAD(list_head* list) {
 	list->next = list;
 	list->prev = list;
 }
@@ -43,8 +42,7 @@ static inline void INIT_LIST_HEAD(list_head* list)
  */
 static inline void __list_add(list_head* newx,
 			      list_head* prev,
-			      list_head* next)
-{
+			      list_head* next) {
 	next->prev = newx;
 	newx->next = next;
 	newx->prev = prev;
@@ -53,27 +51,25 @@ static inline void __list_add(list_head* newx,
 
 /**
  * list_add - add a new entry
- * @new: new entry to be added
+ * @newx: new entry to be added
  * @head: list head to add it after
  *
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
-static inline void list_add(list_head* newx, list_head* head)
-{
+static inline void list_add(list_head* newx, list_head* head) {
 	__list_add(newx, head, head->next);
 }
 
 /**
  * list_add_tail - add a new entry
- * @new: new entry to be added
+ * @newx: new entry to be added
  * @head: list head to add it before
  *
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-static inline void list_add_tail(list_head* newx, list_head* head)
-{
+static inline void list_add_tail(list_head* newx, list_head* head) {
 	__list_add(newx, head->prev, head);
 }
 
@@ -84,14 +80,12 @@ static inline void list_add_tail(list_head* newx, list_head* head)
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-static inline void __list_del(list_head* prev, list_head* next)
-{
+static inline void __list_del(list_head* prev, list_head* next) {
 	next->prev = prev;
 	prev->next = next;
 }
 
-static inline void __list_del_entry(list_head* entry)
-{
+static inline void __list_del_entry(list_head* entry) {
 	__list_del(entry->prev, entry->next);
 }
 
@@ -101,8 +95,7 @@ static inline void __list_del_entry(list_head* entry)
  * Note: list_empty() on entry does not return true after this, the entry is
  * in an undefined state.
  */
-static inline void list_del(list_head* entry)
-{
+static inline void list_del(list_head* entry) {
 	__list_del_entry(entry);
 	entry->next = LIST_POISON1;
 	entry->prev = LIST_POISON2;
@@ -111,12 +104,11 @@ static inline void list_del(list_head* entry)
 /**
  * list_replace - replace old entry by new one
  * @old : the element to be replaced
- * @new : the new element to insert
+ * @newx : the new element to insert
  *
  * If @old was empty, it will be overwritten.
  */
-static inline void list_replace(list_head* old, list_head* newx)
-{
+static inline void list_replace(list_head* old, list_head* newx) {
 	newx->next = old->next;
 	newx->next->prev = newx;
 	newx->prev = old->prev;
@@ -127,13 +119,12 @@ static inline void list_replace(list_head* old, list_head* newx)
 /**
  * list_replace_init - replace old entry by new one and initialize the old one
  * @old : the element to be replaced
- * @new : the new element to insert
+ * @newx : the new element to insert
  *
  * If @old was empty, it will be overwritten.
  */
 static inline void list_replace_init(list_head* old,
-				     list_head* newx)
-{
+				     list_head* newx) {
 	list_replace(old, newx);
 	INIT_LIST_HEAD(old);
 }
@@ -144,8 +135,7 @@ static inline void list_replace_init(list_head* old,
  * @entry2: the location to place entry1
  */
 static inline void list_swap(list_head* entry1,
-			     list_head* entry2)
-{
+			     list_head* entry2) {
 	list_head *pos = entry2->prev;
 
 	list_del(entry2);
@@ -159,8 +149,7 @@ static inline void list_swap(list_head* entry1,
  * list_del_init - deletes entry from list and reinitialize it.
  * @entry: the element to delete from the list.
  */
-static inline void list_del_init(list_head* entry)
-{
+static inline void list_del_init(list_head* entry) {
 	__list_del_entry(entry);
 	INIT_LIST_HEAD(entry);
 }
@@ -170,8 +159,7 @@ static inline void list_del_init(list_head* entry)
  * @list: the entry to move
  * @head: the head that will precede our entry
  */
-static inline void list_move(list_head* list, list_head* head)
-{
+static inline void list_move(list_head* list, list_head* head) {
 	__list_del_entry(list);
 	list_add(list, head);
 }
@@ -182,8 +170,7 @@ static inline void list_move(list_head* list, list_head* head)
  * @head: the head that will follow our entry
  */
 static inline void list_move_tail(list_head* list,
-				  list_head* head)
-{
+				  list_head* head) {
 	__list_del_entry(list);
 	list_add_tail(list, head);
 }
@@ -193,8 +180,7 @@ static inline void list_move_tail(list_head* list,
  * @list: the entry to test
  * @head: the head of the list
  */
-static inline int list_is_first(const list_head* list, const list_head* head)
-{
+static inline int list_is_first(const list_head* list, const list_head* head) {
 	return list->prev == head;
 }
 
@@ -203,8 +189,7 @@ static inline int list_is_first(const list_head* list, const list_head* head)
  * @list: the entry to test
  * @head: the head of the list
  */
-static inline int list_is_last(const list_head* list, const list_head* head)
-{
+static inline int list_is_last(const list_head* list, const list_head* head) {
 	return list->next == head;
 }
 
@@ -213,8 +198,7 @@ static inline int list_is_last(const list_head* list, const list_head* head)
  * @list: the entry to test
  * @head: the head of the list
  */
-static inline int list_is_head(const list_head* list, const list_head* head)
-{
+static inline int list_is_head(const list_head* list, const list_head* head) {
 	return list == head;
 }
 
@@ -222,8 +206,7 @@ static inline int list_is_head(const list_head* list, const list_head* head)
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
-static inline int list_empty(const list_head* head)
-{
+static inline int list_empty(const list_head* head) {
 	return head->next == head;
 }
 
@@ -343,17 +326,152 @@ static inline int list_empty(const list_head* head)
 #define HLIST_HEAD_INIT { .first = NULL }
 #define HLIST_HEAD(name) hlist_head name = {  .first = NULL }
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
-static inline void INIT_HLIST_NODE(hlist_node* h)
-{
+static inline void INIT_HLIST_NODE(hlist_node* h) {
 	h->next = NULL;
 	h->pprev = NULL;
+}
+
+/**
+ * hlist_unhashed - Has node been removed from list and reinitialized?
+ * @h: Node to be checked
+ *
+ * Not that not all removal functions will leave a node in unhashed
+ * state.  For example, hlist_nulls_del_init_rcu() does leave the
+ * node in unhashed state, but hlist_nulls_del() does not.
+ */
+static inline int hlist_unhashed(const hlist_node* h) {
+	return !h->pprev;
 }
 
 /**
  * hlist_empty - Is the specified hlist_head structure an empty hlist?
  * @h: Structure to check.
  */
-static inline int hlist_empty(const hlist_head* h)
-{
+static inline int hlist_empty(const hlist_head* h) {
 	return !h->first;
 }
+
+static inline void __hlist_del(hlist_node* n) {
+	hlist_node *next = n->next;
+	hlist_node **pprev = n->pprev;
+
+	*pprev = next;
+	if (next)
+		next->pprev = pprev;
+}
+
+/**
+ * hlist_del - Delete the specified hlist_node from its list
+ * @n: Node to delete.
+ *
+ * Note that this function leaves the node in hashed state.  Use
+ * hlist_del_init() or similar instead to unhash @n.
+ */
+static inline void hlist_del(hlist_node *n) {
+	__hlist_del(n);
+	n->next = LIST_POISON1;
+	n->pprev = LIST_POISON2;
+}
+
+/**
+ * hlist_del_init - Delete the specified hlist_node from its list and initialize
+ * @n: Node to delete.
+ *
+ * Note that this function leaves the node in unhashed state.
+ */
+static inline void hlist_del_init(hlist_node* n) {
+	if (!hlist_unhashed(n)) {
+		__hlist_del(n);
+		INIT_HLIST_NODE(n);
+	}
+}
+
+/**
+ * hlist_add_head - add a new entry at the beginning of the hlist
+ * @n: new entry to be added
+ * @h: hlist head to add it after
+ *
+ * Insert a new entry after the specified head.
+ * This is good for implementing stacks.
+ */
+static inline void hlist_add_head(hlist_node* n, hlist_head* h) {
+	hlist_node* first = h->first;
+	n->next = first;
+	if (first)
+		first->pprev = &n->next;
+	h->first = n;
+	n->pprev = &h->first;
+}
+
+/**
+ * hlist_add_before - add a new entry before the one specified
+ * @n: new entry to be added
+ * @next: hlist node to add it before, which must be non-NULL
+ */
+static inline void hlist_add_before(hlist_node* n,
+				    hlist_node* next) {
+	n->pprev = next->pprev;
+	n->next = next;
+	next->pprev = &n->next;
+	*(n->pprev) = n;
+}
+
+/**
+ * hlist_add_behind - add a new entry after the one specified
+ * @n: new entry to be added
+ * @prev: hlist node to add it after, which must be non-NULL
+ */
+static inline void hlist_add_behind(hlist_node* n,
+				    hlist_node* prev) {
+	n->next = prev->next;
+	prev->next = n;
+	n->pprev = &prev->next;
+
+	if (n->next)
+		n->next->pprev = &n->next;
+}
+
+/**
+ * hlist_is_singular_node - is node the only element of the specified hlist?
+ * @n: Node to check for singularity.
+ * @h: Header for potentially singular list.
+ *
+ * Check whether the node is the only node of the head without
+ * accessing head, thus avoiding unnecessary cache misses.
+ */
+static inline bool hlist_is_singular_node(hlist_node* n, hlist_head* h) {
+	return !n->next && n->pprev == &h->first;
+}
+
+/**
+ * hlist_move_list - Move an hlist
+ * @old: hlist_head for old list.
+ * @newx: hlist_head for new list.
+ *
+ * Move a list from one list head to another. Fixup the pprev
+ * reference of the first entry if it exists.
+ */
+static inline void hlist_move_list(hlist_head* old,
+				   hlist_head* newx) {
+	newx->first = old->first;
+	if (newx->first)
+		newx->first->pprev = &newx->first;
+	old->first = NULL;
+}
+
+
+#define hlist_entry(ptr, type, member) container_of(ptr,type,member)
+
+#define hlist_for_each(pos, head) \
+	for (pos = (head)->first; pos ; pos = pos->next)
+
+/**
+ * hlist_for_each_entry	- iterate over list of given type
+ * @pos:	the type * to use as a loop cursor.
+ * @head:	the head for your list.
+ * @member:	the name of the hlist_node within the struct.
+ */
+#define hlist_for_each_entry(pos, head, member)				\
+	for (pos = hlist_entry((head)->first, typeof(*(pos)), member);\
+	     pos;							\
+	     pos = hlist_entry((pos)->member.next, typeof(*(pos)), member))

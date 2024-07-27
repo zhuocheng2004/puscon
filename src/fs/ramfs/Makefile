@@ -2,7 +2,7 @@
 .PHONY: all
 all: libpuscon-ramfs.o
 
-libpuscon-ramfs.o: inode.o
+libpuscon-ramfs.o: inode.o file.o
 	${LD} -r -o $@ $^
 
 %.o: %.c

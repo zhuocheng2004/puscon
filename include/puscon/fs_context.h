@@ -4,6 +4,7 @@
 struct puscon_dentry;
 struct puscon_file_system_type;
 struct puscon_fs_context_operations;
+struct puscon_super_block;
 
 /*
  * Filesystem context for holding the parameters used in the creation or
@@ -26,5 +27,8 @@ typedef struct puscon_fs_context_operations {
 	int	(*get_tree) (puscon_fs_context* fc);
 	int	(*reconfigure) (puscon_fs_context* fc);
 } puscon_fs_context_operations;
+
+int puscon_get_tree_nodev(puscon_fs_context* fc,
+	int (*fill_super) (struct puscon_super_block* sb, puscon_fs_context* fc));
 
 #endif
