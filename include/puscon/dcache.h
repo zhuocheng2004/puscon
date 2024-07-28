@@ -91,4 +91,6 @@ static inline puscon_dentry* puscon_dget(puscon_dentry* dentry) {
 
 puscon_dentry* puscon_dget_parent(puscon_dentry* dentry);
 
+void puscon_dput(puscon_dentry*);
+
 #endif

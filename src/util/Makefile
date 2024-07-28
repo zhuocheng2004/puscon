@@ -1,12 +1,11 @@
 
+include ${SRC_ROOT}/main_rules.mk
+
 .PHONY: all
 all: libpuscon-util.o
 
 libpuscon-util.o: idmap.o
 	${LD} -r -o $@ $^
-
-%.o: %.c
-	${CC} ${CPPFLAGS} -o $@ -c $^
 
 .PHONY: clean
 clean:

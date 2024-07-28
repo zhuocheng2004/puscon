@@ -1,4 +1,6 @@
 
+include ${SRC_ROOT}/main_rules.mk
+
 .PHONY: all
 all: libpuscon.a
 
@@ -10,9 +12,6 @@ util/libpuscon-util.o: FORCE
 
 fs/libpuscon-fs.o: FORCE
 	${MAKE} -C fs/
-
-%.o: %.c
-	${CC} ${CPPFLAGS} -o $@ -c $^
 
 .PHONY: clean
 clean:

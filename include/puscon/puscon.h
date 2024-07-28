@@ -2,6 +2,7 @@
 #define PUSCON_PUSCON_H
 
 #include <stdarg.h>
+#include <stdlib.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -95,5 +96,17 @@ int puscon_child_syscall6(puscon_context* context, puscon_task_info* task, u64* 
 
 int puscon_vprintk(const char *fmt, va_list args);
 int puscon_printk(const char *fmt, ...);
+
+static inline void* puscon_kmalloc(size_t size) {
+	return malloc(size);
+}
+
+static inline void* puscon_kzalloc(size_t size) {
+	return calloc(1, size);
+}
+
+static inline void puscon_kfree(void* ptr) {
+	free(ptr);
+}
 
 #endif

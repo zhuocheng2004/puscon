@@ -30,7 +30,7 @@ test_load_static.elf: test_load_static.o
 	@if grep F .tmp_pf > /dev/null; then cat $(LOG_DIR)/$<.txt; fi;
 	@echo "\033[0m"
 
-%.elf_host: %.o ../src/libpuscon.a ../src/util/libpuscon-util.a
+%.elf_host: %.o ../src/libpuscon.a
 	${CC} -o $@ $^
 
 %.elf: %.o
@@ -45,5 +45,4 @@ test_load_static.elf: test_load_static.o
 .PHONY: clean
 clean:
 	@rm -rf $(LOG_DIR)
-	@rm -rf .tmp*
-	@rm -rf *.exe *.o
+	@rm -rf .tmp* *.elf *.o

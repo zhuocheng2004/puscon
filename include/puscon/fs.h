@@ -137,6 +137,8 @@ typedef struct puscon_file_system_type {
 	hlist_head	fs_supers;
 } puscon_file_system_type;
 
+void puscon_kill_litter_super(puscon_super_block* sb);
+
 puscon_super_block* puscon_sget_fc(struct puscon_fs_context* fc,
 	int (*test) (puscon_super_block*, struct puscon_fs_context*),
 	int (*set) (puscon_super_block*, struct puscon_fs_context*));
@@ -158,6 +160,8 @@ puscon_inode* puscon_new_inode(puscon_super_block* sb);
 puscon_file_system_type* puscon_get_filesystem(puscon_file_system_type* fs);
 void puscon_put_filesystem(puscon_file_system_type* fs);
 
+int puscon_mnt_init(puscon_context* context);
+int puscon_ramfs_init_fs_context(struct puscon_fs_context* fc);
 int puscon_init_ramfs_fs(void);
 int puscon_bypass_fs_init(void);
 

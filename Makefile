@@ -8,10 +8,15 @@ LD		?= ld
 export	CC LD
 
 
-CPPFLAGS	?= 
-CPPFLAGS	+= -I${PWD}/include/
+EXTRACPPFLAGS	?= 
+CPPFLAGS	+= -I${PWD}/include/ ${EXTRACPPFLAGS}
 
 export	CPPFLAGS
+
+
+SRC_ROOT	= ${PWD}
+
+export SRC_ROOT
 
 
 .PHONY: all

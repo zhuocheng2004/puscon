@@ -90,13 +90,25 @@ puscon_super_block* puscon_sget_fc(struct puscon_fs_context* fc,
 	return s;
 }
 
+int puscon_set_anon_super(puscon_super_block* sb, void* data) {
+	return 0; // TODO
+}
+
+void puscon_kill_litter_super(puscon_super_block* sb) {
+	; // TODO
+}
+
+int puscon_set_anon_super_fc(puscon_super_block* sb, puscon_fs_context* fc) {
+	return puscon_set_anon_super(sb, NULL);
+}
+
 static int vfs_get_super(puscon_fs_context* fc,
 	int (*test) (puscon_super_block*, puscon_fs_context*),
 	int (*fill_super) (puscon_super_block* sb, puscon_fs_context* fc)) {
 	puscon_super_block *sb;
 	int err;
 
-	sb = puscon_sget_fc(fc, test, NULL);
+	sb = puscon_sget_fc(fc, test, puscon_set_anon_super_fc);
 	if (IS_ERR(sb))
 		return PTR_ERR(sb);
 
@@ -116,4 +128,38 @@ error:
 int puscon_get_tree_nodev(puscon_fs_context* fc,
 	int (*fill_super) (struct puscon_super_block* sb, puscon_fs_context* fc)) {
 		return vfs_get_super(fc, NULL, fill_super);
+}
+
+
+/**
+ * vfs_get_tree - Get the mountable root
+ * @fc: The superblock configuration context.
+ *
+ * The filesystem is invoked to get or create a superblock which can then later
+ * be used for mounting.  The filesystem places a pointer to the root to be
+ * used for mounting in @fc->root.
+ */
+int puscon_vfs_get_tree(puscon_fs_context* fc) {
+	puscon_super_block *sb;
+	int error;
+
+	if (fc->root)
+		return -EBUSY;
+
+	/* Get the mountable root in fc->root, with a ref on the root and a ref
+	 * on the superblock.
+	 */
+	error = fc->ops->get_tree(fc);
+	if (error < 0)
+		return error;
+
+	if (!fc->root) {
+		puscon_printk(KERN_ERR "Filesystem %s get_tree() didn't set fc->root\n", 
+			fc->fs_type->name);
+		return -ENODEV;
+	}
+
+	sb = fc->root->d_sb;
+
+	return 0;
 }

@@ -24,7 +24,7 @@ void skip_syscall(pid_t child_pid) {
  * This function will make a syscall be executed directly in child context.
  * 
  * We first make the child jump to the specified entry with arguments in registers (with regs saved), 
- * execute the syscall, then return the child to the original position.
+ * execute the syscall, get the result,and then return the child to the original position.
  */
 int puscon_child_syscall6(puscon_context* context, puscon_task_info* task, u64* ret,
 	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5) {

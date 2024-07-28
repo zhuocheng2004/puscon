@@ -94,7 +94,9 @@ int puscon_ramfs_init_fs_context(puscon_fs_context* fc) {
 	return 0;
 }
 
-static void ramfs_kill_sb(puscon_super_block* sb) { }
+static void ramfs_kill_sb(puscon_super_block* sb) {
+	puscon_kill_litter_super(sb);
+}
 
 static puscon_file_system_type ramfs_fs_type = {
 	.name		= "ramfs",

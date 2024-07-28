@@ -12,6 +12,7 @@
 #include <puscon/fs.h>
 #include <puscon/puscon.h>
 
+
 int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
 	if (puscon_init_ramfs_fs()) {
 		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"ramfs\".\n");
@@ -22,6 +23,8 @@ int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
 		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem \"bypass\".\n");
 		return 1;
 	}
+
+	puscon_mnt_init(context);
 
 	return 0;
 }
@@ -149,7 +152,7 @@ int puscon_start(puscon_context* context) {
 	context->should_stop = 0;
 
 	waitpid(child_pid, NULL, __WALL);
-	puscon_printk(KERN_INFO "Tracee (pid=1, host_pid=%d) is now under control.\n", child_pid);
+	puscon_printk(KERN_INFO "Child [pid=1, host_pid=%d] is now under control.\n", child_pid);
 
 	ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 
@@ -275,7 +278,7 @@ int puscon_main(puscon_config* config) {
 								}
 							}
 					}
-					if (!err)
+					if (!(err || context.should_stop))
 						ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 					break;
 				case SIGSEGV:
@@ -290,6 +293,10 @@ int puscon_main(puscon_config* config) {
 			if (err || context.should_stop) {
 				break;
 			}
+		} else {
+			puscon_printk(KERN_EMERG "Unhandled signal status %d from child %d.\n", child_status, child_pid);
+			err = 1;
+			break;
 		}
 	}
 

@@ -2,16 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <puscon/puscon.h>
 #include <puscon/util.h>
 
 int puscon_idmap_init(puscon_idmap* idmap, u8 capacity_shift) {
 	if (!idmap) {
-		fprintf(stderr, "Error: idmap is NULL\n");
+		puscon_printk(KERN_ERR "Error: idmap is NULL\n");
 		return 1;
 	}
 
 	if (capacity_shift > MAX_CAPACITY_SHIFT) {
-		fprintf(stderr, "Error: idmap initialized with too large capacity_shift %d (MAX: %d)\n", capacity_shift, MAX_CAPACITY_SHIFT);
+		puscon_printk(KERN_ERR "Error: idmap initialized with too large capacity_shift %d (MAX: %d)\n", capacity_shift, MAX_CAPACITY_SHIFT);
 		return 1;
 	}
 	idmap->capacity_shift = capacity_shift;
@@ -20,13 +21,13 @@ int puscon_idmap_init(puscon_idmap* idmap, u8 capacity_shift) {
 
 	idmap->free_map = calloc(capacity, 1);
 	if (!idmap->free_map) {
-		fprintf(stderr, "Error: failed to allocate idmap.free_map (capacity_shift=%d)\n", capacity_shift);
+		puscon_printk(KERN_ERR "Error: failed to allocate idmap.free_map (capacity_shift=%d)\n", capacity_shift);
 		return 1;
 	}
 	
 	idmap->ptrs = calloc(capacity, sizeof(void*));
 	if (!idmap->ptrs) {
-		fprintf(stderr, "Error: failed to allocate idmap.ptrs (capacity_shift=%d)\n", capacity_shift);
+		puscon_printk(KERN_ERR "Error: failed to allocate idmap.ptrs (capacity_shift=%d)\n", capacity_shift);
 		return 1;
 	}
 
@@ -44,7 +45,7 @@ void puscon_idmap_destroy(puscon_idmap* idmap) {
 
 s32 puscon_idmap_alloc(puscon_idmap* idmap) {
 	if (!idmap || !idmap->free_map) {
-		fprintf(stderr, "Error: bad idmap\n");
+		puscon_printk(KERN_ERR "Error: bad idmap\n");
 		return -1;
 	}
 
@@ -70,17 +71,17 @@ s32 puscon_idmap_alloc(puscon_idmap* idmap) {
 
 int puscon_idmap_free(puscon_idmap* idmap, u32 id) {
 	if (!idmap || !idmap->free_map) {
-		fprintf(stderr, "Error: bad idmap\n");
+		puscon_printk(KERN_ERR "Error: bad idmap\n");
 		return -1;
 	}
 
 	if (id >= idmap->capacity) {
-		fprintf(stderr, "Error: id >= capacity [%u]\n", idmap->capacity);
+		puscon_printk(KERN_ERR "Error: id >= capacity [%u]\n", idmap->capacity);
 		return -1;
 	}
 
 	if (!idmap->free_map[id]) {
-		fprintf(stderr, "Warning: freeing unused id %u\n", id);
+		puscon_printk(KERN_WARNING "Warning: freeing unused id %u\n", id);
 	}
 
 	idmap->free_map[id] = 0;
@@ -90,7 +91,7 @@ int puscon_idmap_free(puscon_idmap* idmap, u32 id) {
 
 int puscon_idmap_occupied(puscon_idmap* idmap) {
 	if (!idmap || !idmap->free_map) {
-		fprintf(stderr, "Error: bad idmap\n");
+		puscon_printk(KERN_ERR "Error: bad idmap\n");
 		return -1;
 	}
 
