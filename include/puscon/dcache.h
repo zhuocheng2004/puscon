@@ -55,7 +55,7 @@ typedef struct puscon_dentry_operations {
 	int		(*d_compare) (const puscon_dentry*, unsigned int, const char*, puscon_qstr*);
 	int		(*d_delete) (const puscon_dentry*);
 	int		(*d_init) (puscon_dentry*);
-	void		(*d_releasse) (puscon_dentry*);
+	void		(*d_release) (puscon_dentry*);
 	void		(*d_iput) (puscon_dentry*, struct puscon_inode*);
 	void		*(*d_dname) (puscon_dentry*, char*, int);
 } puscon_dentry_operations;

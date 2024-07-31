@@ -1,6 +1,8 @@
 #ifndef PUSCON_TYPES_H
 #define PUSCON_TYPES_H
 
+#define __user
+
 typedef char			bool;
 #ifndef true
 #define true	1
@@ -16,6 +18,8 @@ typedef unsigned long long	u64;
 typedef char			s8;
 typedef int			s32;
 typedef long long		s64;
+
+typedef unsigned int		mode_t;
 
 
 typedef struct list_head {

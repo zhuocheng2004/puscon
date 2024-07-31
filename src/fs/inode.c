@@ -1,5 +1,4 @@
 
-#include <stdlib.h>
 #include <string.h>
 
 #include <puscon/err.h>
@@ -41,7 +40,7 @@ static puscon_inode* alloc_inode(puscon_super_block* sb) {
 	if (ops->alloc_inode)
 		inode = ops->alloc_inode(sb);
 	else
-		inode = malloc(sizeof(puscon_inode));
+		inode = puscon_kmalloc(sizeof(puscon_inode));
 
 	if (!inode)
 		return NULL;
@@ -64,7 +63,7 @@ static void destroy_inode(puscon_inode* inode) {
 	if (ops->free_inode) {
 		ops->free_inode(inode);
 	} else {
-		free(inode);
+		puscon_kfree(inode);
 	}
 }
 

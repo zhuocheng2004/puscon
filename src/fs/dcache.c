@@ -52,8 +52,8 @@ static puscon_dentry* __dentry_kill(puscon_dentry* dentry) {
 	if (dentry->d_inode)
 		dentry_unlink_inode(dentry);
 
-	if (dentry->d_op && dentry->d_op->d_releasse)
-		dentry->d_op->d_releasse(dentry);
+	if (dentry->d_op && dentry->d_op->d_release)
+		dentry->d_op->d_release(dentry);
 
 	if (!IS_ROOT(dentry)) {
 		parent = dentry->d_parent;

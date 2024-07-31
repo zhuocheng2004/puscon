@@ -46,6 +46,8 @@ typedef struct puscon_task_info {
 typedef struct puscon_task_context {
 	puscon_task_info*	entry_task;
 
+	puscon_task_info*	current_task;
+
 	puscon_idmap	tasks;
 
 	/* map: real host pid -> virtual pid */

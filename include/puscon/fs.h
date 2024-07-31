@@ -1,8 +1,6 @@
 #ifndef PUSCON_FS_H
 #define PUSCON_FS_H
 
-#include <sys/stat.h>
-
 #include <puscon/dcache.h>
 #include <puscon/list.h>
 #include <puscon/mount.h>
@@ -91,6 +89,12 @@ typedef struct puscon_super_block {
 } puscon_super_block;
 
 
+/*
+ * VFS helper functions..
+ */
+int puscon_vfs_mkdir(puscon_inode*, puscon_dentry*, mode_t);
+
+
 typedef struct puscon_file_operations {
 	off_t		(*llseek) (puscon_file*, off_t, int);
 	ssize_t		(*read)	(puscon_file*, char*, size_t, off_t*);
@@ -144,6 +148,24 @@ puscon_super_block* puscon_sget_fc(struct puscon_fs_context* fc,
 	int (*set) (puscon_super_block*, struct puscon_fs_context*));
 
 void puscon_iput(puscon_inode*);
+
+
+/* fs/open.c */
+typedef struct puscon_filename {
+	const char		*name;		/* pointer to actual string */
+	const __user char	*uptr;		/* original userland pointer */
+	int			refcnt;
+	const char		iname[];
+} puscon_filename;
+
+puscon_filename* puscon_getname_flags(puscon_context*, const char __user*, int);
+puscon_filename* puscon_getname(puscon_context*, const char __user*);
+puscon_filename* puscon_getname_kernel(const char*);
+void puscon_putname(puscon_filename* name);
+
+#define __getname()		puscon_kmalloc(PATH_MAX)
+#define __putname(name)		puscon_kfree((void*) name)
+
 
 int puscon_register_filesystem(puscon_file_system_type*);
 int puscon_unregister_filesystem(puscon_file_system_type*);

@@ -12,14 +12,14 @@ static puscon_inode* ramfs_get_inode(puscon_super_block* sb, const puscon_inode*
 	puscon_inode *inode = puscon_new_inode(sb);
 
 	if (inode) {
-		switch (mode & __S_IFMT) {
+		switch (mode & S_IFMT) {
 			default:
 				break;
-			case __S_IFREG:
+			case S_IFREG:
 				inode->i_op = &puscon_ramfs_file_inode_operations;
 				inode->i_fop = &puscon_ramfs_file_operations;
 				break;
-			case __S_IFDIR:
+			case S_IFDIR:
 				inode->i_op = &ramfs_dir_inode_operations;
 				inode->i_fop = NULL;
 				puscon_inc_nlink(inode);
@@ -44,14 +44,14 @@ static int ramfs_mknod(puscon_inode* dir, puscon_dentry* dentry, mode_t mode) {
 }
 
 static int ramfs_mkdir(puscon_inode* dir, puscon_dentry* dentry, mode_t mode) {
-	int retval = ramfs_mknod(dir, dentry, mode | __S_IFDIR);
+	int retval = ramfs_mknod(dir, dentry, mode | S_IFDIR);
 	if (!retval)
 		puscon_inc_nlink(dir);
 	return retval;
 }
 
 static int ramfs_create(puscon_inode* dir, puscon_dentry* dentry, mode_t mode, bool excl) {
-	return ramfs_mknod(dir, dentry, mode | __S_IFREG);
+	return ramfs_mknod(dir, dentry, mode | S_IFREG);
 }
 
 static const puscon_inode_operations ramfs_dir_inode_operations = {
@@ -70,7 +70,7 @@ static int ramfs_fill_super(puscon_super_block* sb, puscon_fs_context* fc) {
 
 	sb->s_op	= &ramfs_ops;
 
-	inode = ramfs_get_inode(sb, NULL, __S_IFDIR);
+	inode = ramfs_get_inode(sb, NULL, S_IFDIR);
 	sb->s_root = puscon_d_make_root(inode);
 	if (!sb->s_root)
 		return -ENOMEM;

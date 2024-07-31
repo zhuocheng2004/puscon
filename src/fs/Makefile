@@ -4,8 +4,8 @@ include ${SRC_ROOT}/main_rules.mk
 .PHONY: all
 all: libpuscon-fs.o
 
-libpuscon-fs.o: namespace.o dcache.o filesystems.o fs_context.o \
-		inode.o super.o \
+libpuscon-fs.o: dcache.o filesystems.o fs_context.o inode.o \
+		namei.o namespace.o  super.o \
 		bypass/libpuscon-bypass.o ramfs/libpuscon-ramfs.o
 	${LD} -r -o $@ $^
 

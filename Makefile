@@ -8,8 +8,11 @@ LD		?= ld
 export	CC LD
 
 
-EXTRACPPFLAGS	?= 
-CPPFLAGS	+= -I${PWD}/include/ ${EXTRACPPFLAGS}
+CPPFLAGS	+= -I${PWD}/include/
+
+ifdef DEBUG
+CPPFLAGS	+= -g
+endif
 
 export	CPPFLAGS
 
