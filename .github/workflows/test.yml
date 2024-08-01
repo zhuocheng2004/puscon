@@ -1,0 +1,22 @@
+name: build & test
+
+on:
+    push:
+    schedule:
+        - cron: "0 0 * * 0"	# weekly
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out
+              uses: actions/checkout@v4
+            - name: Build
+              run: make
+
+    test:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Test
+              run: make test
