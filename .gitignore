@@ -9,4 +9,6 @@ build/
 *.so
 .tmp*
 
+.private*
+
 .vscode/

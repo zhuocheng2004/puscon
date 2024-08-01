@@ -2,9 +2,10 @@
 #define PUSCON_KERNEL_SYSCALL_H
 
 #include <puscon/puscon.h>
+#include <puscon/types.h>
 
-#include "syscall_x86_64.h"
-#include "types.h"
+#include "arch_syscall.h"
+
 
 static inline void kernel_enter() {
 	syscall0(SYS_puscon_kernel_enter);
@@ -28,7 +29,7 @@ static inline void set_syscall_entry(u64 entry) {
 
 
 static inline ssize_t write(int fd, const void *buf, size_t count) {
-	syscall3(SYS_write, fd, (u64) buf, count);
+	return syscall3(SYS_write, fd, (u64) buf, count);
 }
 
 static inline void _exit(int status) {

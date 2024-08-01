@@ -240,4 +240,6 @@ puscon_dentry* puscon_d_make_root(puscon_inode* root_inode) {
 		else
 			puscon_iput(root_inode);
 	}
+
+	return res;
 }

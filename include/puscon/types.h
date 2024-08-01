@@ -1,7 +1,7 @@
 #ifndef PUSCON_TYPES_H
 #define PUSCON_TYPES_H
 
-#define __user
+#include <arch_types.h>
 
 typedef char			bool;
 #ifndef true

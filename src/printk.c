@@ -58,6 +58,8 @@ int puscon_vprintk(const char *fmt, va_list args) {
 			fputs("\033[0m", stderr);
 		}
 	}
+
+	return n;
 }
 
 int puscon_printk(const char *fmt, ...) {

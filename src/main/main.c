@@ -24,7 +24,7 @@ static void version() {
 
 static int parse_options(puscon_config* config, int argc, char *argv[]) {
 	/* reset pointers to NULL */
-	bzero(config, sizeof(puscon_config));
+	memset(config, 0, sizeof(puscon_config));
 
 	int pos, cnt = 0;
 	for (pos = 1; pos < argc && cnt < 2; pos++) {

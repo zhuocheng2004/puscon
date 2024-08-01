@@ -1,20 +1,28 @@
 
 MAKEFLAGS	+= --no-print-directory
 
+ARCH		?= x86_64
 
-CC		?= gcc
+export ARCH
+
+
+CC		?= cc
 LD		?= ld
 
 export	CC LD
 
 
-CPPFLAGS	+= -I${PWD}/include/
+CFLAGS	+= -I${PWD}/include/ -I${PWD}/include/arch/${ARCH}/ -Wall -Wno-unused
 
 ifdef DEBUG
-CPPFLAGS	+= -g
+CFLAGS	+= -g
 endif
 
-export	CPPFLAGS
+ifdef ANDROID
+CFLAGS	+= -D__android__
+endif
+
+export	CFLAGS
 
 
 SRC_ROOT	= ${PWD}

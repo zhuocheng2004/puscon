@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/user.h>
 
+#include <puscon/defs.h>
 #include <puscon/task.h>
 #include <puscon/types.h>
 
@@ -100,7 +101,7 @@ int puscon_main(puscon_config* config);
 
 int puscon_syscall_handle(puscon_context* context);
 
-void skip_syscall(puscon_context* context);
+int skip_syscall(puscon_context* context);
 
 /*
  * execute the syscall by the child task

@@ -5,12 +5,13 @@
 #include <string.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
-#include <sys/user.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <puscon/defs.h>
 #include <puscon/fs.h>
 #include <puscon/puscon.h>
+#include <puscon/types.h>
 
 
 int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
@@ -117,9 +118,13 @@ int puscon_start(puscon_context* context) {
 			NULL,
 		};
 
-		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+		long err = ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+		if (err) {
+			puscon_printk(KERN_EMERG "Error: PTRACE_TRACEME failed.\n");
+			exit(1);
+		}
 		raise(SIGSTOP);
-		int err = execve(config->kernel_filename, argv, NULL);
+		err = execve(config->kernel_filename, argv, NULL);
 		if (err) {
 			puscon_printk(KERN_EMERG "Error: failed to exec %s.\n", config->kernel_filename);
 		}
@@ -127,7 +132,6 @@ int puscon_start(puscon_context* context) {
 	}
 
 	/* parent */
-	ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC);
 
 	puscon_task_info *entry_task = context->task_context.entry_task;
 	entry_task->host_pid = child_pid;
@@ -146,7 +150,17 @@ int puscon_start(puscon_context* context) {
 	waitpid(child_pid, NULL, __WALL);
 	puscon_printk(KERN_INFO "Child [pid=1, host_pid=%d] is now under control.\n", child_pid);
 
-	ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+	long err = ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC);
+	if (err) {
+		puscon_printk(KERN_EMERG "Error: PTRACE_SETOPTIONS failed.\n");
+		return 1;
+	}
+
+	err = ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+	if (err) {
+		puscon_printk(KERN_EMERG "Error: PTRACE_SYSCALL failed.\n");
+		return 1;
+	}
 
 	return 0;
 }
@@ -177,7 +191,7 @@ static char* get_args_string(int argc, char* argv[]) {
 }
 
 int puscon_main(puscon_config* config) {
-	int err;
+	long err;
 
 	puscon_context context;
 	err = puscon_context_init(&context, config);
@@ -212,9 +226,14 @@ int puscon_main(puscon_config* config) {
 
 			switch (sig) {
 				case SIGTRAP:
-					struct user_regs_struct regs;
-					ptrace(PTRACE_GETREGS, child_pid, 0, &regs);
-					u64 syscall = regs.orig_rax;
+					HAPPY_CLANG
+					arch_regs regs;
+					err = regs_get(child_pid, &regs);
+					if (err) {
+						puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+						break;
+					}
+					unsigned long syscall = regs_syscall(&regs);
 
 					u32 pid = context.task_context.pid_map[child_pid];
 					if (pid == 0) {
@@ -228,18 +247,18 @@ int puscon_main(puscon_config* config) {
 
 					switch (syscall) {
 						case SYS_puscon_nop:
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						case SYS_puscon_kernel_enter:
 							puscon_printk(KERN_DEBUG "[PID %d] Entering kernel mode.\n", pid);
 							task->kernel = 1;
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						case SYS_puscon_kernel_exit:
 							puscon_printk(KERN_DEBUG "[PID %d] Exiting kernel mode.\n", pid);
 							task->kernel = 0;
 							task->bypass = 0;
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						case SYS_puscon_bypass_enable:
 							if (!task->kernel) {
@@ -249,18 +268,19 @@ int puscon_main(puscon_config* config) {
 							}
 							puscon_printk(KERN_DEBUG "[PID %d] Enabling bypassing.\n", pid);
 							task->bypass = 1;
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						case SYS_puscon_bypass_disable:
 							puscon_printk(KERN_DEBUG "[PID %d] Disabling bypassing.\n", pid);
 							task->bypass = 0;
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						case SYS_puscon_set_syscall_entry:
-							u64 syscall_entry = regs.rdi;
+							HAPPY_CLANG
+							u64 syscall_entry = regs_arg0(&regs);
 							puscon_printk(KERN_INFO "[PID %d] Syscall entry set to 0x%llx.\n", pid, syscall_entry);
 							task->syscall_entry = syscall_entry;
-							skip_syscall(&context);
+							err = skip_syscall(&context);
 							break;
 						default:
 							if (task->kernel && task->bypass) {
@@ -272,8 +292,9 @@ int puscon_main(puscon_config* config) {
 								}
 							}
 					}
-					if (!(err || context.should_stop))
-						ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+					if (!(err || context.should_stop)) {
+						err = ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
+					}
 					break;
 				case SIGSEGV:
 					puscon_printk(KERN_EMERG "[PID %d] Error: child (host_pid=%d) Segmentation Fault.\n", pid, child_pid);

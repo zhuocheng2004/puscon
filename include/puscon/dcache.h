@@ -23,7 +23,7 @@ typedef struct puscon_qstr {
 		};
 		u64 hash_len;
 	};
-	const unsigned char *name;
+	const char *name;
 } puscon_qstr;
 
 #define QSTR_INIT(n,l) { { { .len = l } }, .name = n }
@@ -40,7 +40,7 @@ typedef struct puscon_dentry {
 	struct puscon_inode*	d_inode;	/* Where the name belongs to - NULL is
 	                                         * negative */
 
-	unsigned char		d_iname[DNAME_INLINE_LEN];	/* small names */
+	char			d_iname[DNAME_INLINE_LEN];	/* small names */
 
 	const struct puscon_dentry_operations*	d_op;
 	struct puscon_super_block*	d_sb;	/* The root of the dentry tree */

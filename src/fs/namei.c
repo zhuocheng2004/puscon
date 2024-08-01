@@ -147,6 +147,7 @@ static puscon_dentry* filename_create(int dfd, puscon_filename* name, puscon_pat
 	int error;
 
 	// TODO
+	return NULL;
 }
 
 

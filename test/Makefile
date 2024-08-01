@@ -1,4 +1,6 @@
 
+include ${SRC_ROOT}/main_rules.mk
+
 LOG_DIR		:= logs/
 
 LIB_TESTS	:= idmap
@@ -36,11 +38,6 @@ test_load_static.elf: test_load_static.o
 %.elf: %.o
 	${CC} -o $@ $^
 
-%.o: %.c
-	${CC} ${CPPFLAGS} -o $@ -c $^
-
-%.o: %.s
-	${CC} ${CPPFLAGS} -o $@ -c $^
 
 .PHONY: clean
 clean:

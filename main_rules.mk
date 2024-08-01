@@ -1,3 +1,3 @@
 
 %.o: %.c
-	${CC} ${CPPFLAGS} -o $@ -c $^
+	${CC} ${CFLAGS} -o $@ -c $^
