@@ -8,7 +8,8 @@ kernel: link.ld ${OBJS}
 ifdef ANDROID
 	${CC} -pie -o $@ -nostdlib ${OBJS}
 else
-	${LD} -static -pie --no-dynamic-linker -o $@ -T link.ld ${OBJS}
+#	${LD} -static -pie --no-dynamic-linker -o $@ -T link.ld ${OBJS}
+	${CC} -pie -static -nostdlib -o $@ ${OBJS}
 endif
 
 %.o: %.s

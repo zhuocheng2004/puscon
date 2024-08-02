@@ -1,28 +1,25 @@
 
-include ${SRC_ROOT}/main_rules.mk
+SO_3	:= libpuscon.so.${PUSCON_VERSION_MAJOR}.${PUSCON_VERSION_MINOR}.${PUSCON_VERSION_PATCH}
+SO_1	:= libpuscon.so.${PUSCON_VERSION_MAJOR}
 
 .PHONY: all
-all: libpuscon.a
+all: libpuscon.a ${SO_3} ${SO_1}
 
-libpuscon.a: puscon.o syscall.o printk.o \
-	util/libpuscon-util.o lib/libpuscon-lib.o fs/libpuscon-fs.o
-	ar rcs $@ $^
+include ${SRC_ROOT}/main_rules.mk
 
-util/libpuscon-util.o: FORCE
-	${MAKE} -C util/
+OBJS	:= puscon.o syscall.o printk.o
+SUBDIRS	:= fs lib util
 
-lib/libpuscon-lib.o: FORCE
-	${MAKE} -C lib/
+libpuscon.a: ${OBJS} $(call targets_subdir,${SUBDIRS})
+	${AR} rcs $@ $^
 
-fs/libpuscon-fs.o: FORCE
-	${MAKE} -C fs/
+${SO_3}: ${OBJS} $(call targets_subdir,${SUBDIRS})
+	${CC} -shared -o $@ $^
+
+${SO_1}: ${SO_3}
+	@rm -f $@
+	ln -s $^ $@
 
 .PHONY: clean
-clean:
-	${MAKE} -C lib/ clean
-	${MAKE} -C fs/ clean
-	${MAKE} -C util/ clean
-	@rm -rf *.a *.o
-
-.PHONY: FORCE
-FORCE:
+clean: $(call targets_subdir_clean,${SUBDIRS})
+	@rm -rf *.so* *.a *.o

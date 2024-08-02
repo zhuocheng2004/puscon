@@ -1,25 +1,17 @@
 
-include ${SRC_ROOT}/main_rules.mk
-
 .PHONY: all
 all: libpuscon-fs.o
 
-libpuscon-fs.o: dcache.o filesystems.o fs_context.o inode.o \
+include ${SRC_ROOT}/main_rules.mk
+
+OBJS	:= dcache.o filesystems.o fs_context.o inode.o \
 		namei.o namespace.o  super.o \
-		bypass/libpuscon-bypass.o ramfs/libpuscon-ramfs.o
+
+SUBDIRS	:= bypass ramfs
+
+libpuscon-fs.o: ${OBJS} $(call targets_subdir,${SUBDIRS})
 	${LD} -r -o $@ $^
 
-bypass/libpuscon-bypass.o: FORCE
-	${MAKE} -C bypass/
-
-ramfs/libpuscon-ramfs.o: FORCE
-	${MAKE} -C ramfs/
-
 .PHONY: clean
-clean:
-	${MAKE} -C bypass/ clean
-	${MAKE} -C ramfs/ clean
+clean: $(call targets_subdir_clean,${SUBDIRS})
 	@rm -rf *.a *.o
-
-.PHONY: FORCE
-FORCE:

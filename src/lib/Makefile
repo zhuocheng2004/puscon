@@ -1,8 +1,8 @@
 
-include ${SRC_ROOT}/main_rules.mk
-
 .PHONY: all
 all: libpuscon-lib.o
+
+include ${SRC_ROOT}/main_rules.mk
 
 libpuscon-lib.o: usercopy.o
 	${LD} -r -o $@ $^

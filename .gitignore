@@ -6,7 +6,7 @@ build/
 *.dep
 *.out
 *.o
-*.so
+*.so*
 .tmp*
 
 .private*

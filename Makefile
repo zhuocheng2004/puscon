@@ -1,34 +1,7 @@
 
 MAKEFLAGS	+= --no-print-directory
 
-ARCH		?= x86_64
-
-export ARCH
-
-
-CC		?= cc
-LD		?= ld
-
-export	CC LD
-
-
-CFLAGS	+= -I${PWD}/include/ -I${PWD}/include/arch/${ARCH}/ -Wall -Wno-unused
-
-ifdef DEBUG
-CFLAGS	+= -g
-endif
-
-ifdef ANDROID
-CFLAGS	+= -D__android__
-endif
-
-export	CFLAGS
-
-
-SRC_ROOT	= ${PWD}
-
-export SRC_ROOT
-
+include config.mk
 
 .PHONY: all
 all: libpuscon puscon-cli kernel
@@ -55,9 +28,11 @@ clean:
 	${MAKE} -C src/kernel/ clean
 	${MAKE} -C src/main/ clean
 	${MAKE} -C src/ clean
+	rm -rf include/gen/
 
 .PHONY: run
 run: puscon-cli kernel
-	./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel ./test/test_load_static.elf
+	LD_LIBRARY_PATH=${SRC_ROOT}/src/:${LD_LIBRARY_PATH} ./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel ./test/test_load_static.elf
 
+.PHONY: FORCE
 FORCE:

@@ -1,8 +1,4 @@
 
-include ${SRC_ROOT}/main_rules.mk
-
-LOG_DIR		:= logs/
-
 LIB_TESTS	:= idmap
 LIB_TESTS	:= $(addsuffix .lib_test, ${LIB_TESTS})
 .PHONY: LIB_TESTS
@@ -13,7 +9,11 @@ RUN_TESTS	:= $(addsuffix .run_test, ${RUN_TESTS})
 .PHONY: all
 all: ${LIB_TESTS} ${RUN_TESTS}
 
-test_load_static.elf: test_load_static.o
+include ${SRC_ROOT}/main_rules.mk
+
+LOG_DIR		:= logs/
+
+test_load_static.elf: test_load_static_${ARCH}.o
 	${LD} -static -o $@ $<
 
 %.lib_test: test_%.elf_host

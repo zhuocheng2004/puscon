@@ -10,7 +10,7 @@
 static void usage(const char* prog_name) {
 	if (!prog_name)
 		prog_name = "puscon-cli";
-	fprintf(stderr, "Usage: %s [options] <kernel_filename>\n", prog_name);
+	fprintf(stderr, "Usage: %s [options] <kernel_filename> <entry_name>\n", prog_name);
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "    --ansi-color        output logs with ansi colors for different levels.\n");
 	fprintf(stderr, "    --help              print this help message.\n");
