@@ -6,26 +6,23 @@
 #include <puscon/puscon.h>
 
 
-static puscon_file_system_type* files_systems = NULL;
-
-
 /* WARNING: This can be used only if we _already_ own a reference */
-puscon_file_system_type* puscon_get_filesystem(puscon_file_system_type* fs) {
+puscon_file_system_type* puscon_get_filesystem(puscon_context* context, puscon_file_system_type* fs) {
 	return fs;
 }
 
-void puscon_put_filesystem(puscon_file_system_type* fs) { }
+void puscon_put_filesystem(puscon_context* context, puscon_file_system_type* fs) { }
 
-static puscon_file_system_type** find_filesystem(const char* name, unsigned len) {
+static puscon_file_system_type** find_filesystem(puscon_context* context, const char* name, unsigned len) {
 	puscon_file_system_type **p;
-	for (p = &files_systems; *p; p = &(*p)->next) {
+	for (p = &context->files_systems; *p; p = &(*p)->next) {
 		if (strncmp((*p)->name, name, len) == 0 && ~(*p)->name[len])
 			break;
 	}
 	return p;
 }
 
-int puscon_register_filesystem(puscon_file_system_type* fs) {
+int puscon_register_filesystem(puscon_context* context, puscon_file_system_type* fs) {
 	int res = 0;
 	puscon_file_system_type **p;
 
@@ -40,7 +37,7 @@ int puscon_register_filesystem(puscon_file_system_type* fs) {
 		goto out;
 	}
 
-	p = find_filesystem(fs->name, strlen(fs->name));
+	p = find_filesystem(context, fs->name, strlen(fs->name));
 	if (*p)
 		res = -EBUSY;
 	else
@@ -55,10 +52,10 @@ out:
 	return res;
 }
 
-int puscon_unregister_filesystem(puscon_file_system_type* fs) {
+int puscon_unregister_filesystem(puscon_context* context, puscon_file_system_type* fs) {
 	puscon_file_system_type **tmp;
 
-	tmp = &files_systems;
+	tmp = &context->files_systems;
 	while (*tmp) {
 		if (fs == *tmp) {
 			*tmp = fs->next;

@@ -7,9 +7,6 @@
 #include <puscon/fs_context.h>
 
 
-static LIST_HEAD(super_blocks);
-
-
 /* Free a superblock that has never been seen by anyone */
 static void destroy_unused_super(puscon_super_block* s) {
 	if (!s)
@@ -84,9 +81,9 @@ puscon_super_block* puscon_sget_fc(struct puscon_fs_context* fc,
 	/*
 	 * Make the superblock visible on @super_blocks and @fs_supers.
 	 */
-	list_add_tail(&s->s_list, &super_blocks);
+	list_add_tail(&s->s_list, &fc->context->super_blocks);
 	hlist_add_head(&s->s_instances, &s->s_type->fs_supers);
-	puscon_get_filesystem(s->s_type);
+	puscon_get_filesystem(fc->context, s->s_type);
 	return s;
 }
 

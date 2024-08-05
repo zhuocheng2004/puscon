@@ -302,8 +302,6 @@ static inline int list_empty(const list_head* head) {
 	     !list_entry_is_head(pos, head, member);			\
 	     pos = list_next_entry(pos, member))
 
-#endif
-
 /**
  * list_for_each_entry_reverse - iterate backwards over list of given type.
  * @pos:	the type * to use as a loop cursor.
@@ -475,3 +473,5 @@ static inline void hlist_move_list(hlist_head* old,
 	for (pos = hlist_entry((head)->first, typeof(*(pos)), member);\
 	     pos;							\
 	     pos = hlist_entry((pos)->member.next, typeof(*(pos)), member))
+
+#endif

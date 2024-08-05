@@ -1,6 +1,7 @@
 #ifndef PUSCON_FS_CONTEXT_H
 #define PUSCON_FS_CONTEXT_H
 
+struct puscon_context;
 struct puscon_dentry;
 struct puscon_file_system_type;
 struct puscon_fs_context_operations;
@@ -18,6 +19,7 @@ typedef enum puscon_fs_context_purpose {
  * already set.
  */
 typedef struct puscon_fs_context {
+	struct puscon_context*		context;
 	const struct puscon_fs_context_operations*	ops;
 	struct puscon_file_system_type*	fs_type;
 	void*				fs_private;	/* The filesystem's context */
@@ -34,7 +36,7 @@ typedef struct puscon_fs_context_operations {
 	int	(*reconfigure) (puscon_fs_context* fc);
 } puscon_fs_context_operations;
 
-puscon_fs_context* puscon_fs_context_for_mount(struct puscon_file_system_type* fs_type, unsigned int sb_flags);
+puscon_fs_context* puscon_fs_context_for_mount(struct puscon_context* context, struct puscon_file_system_type* fs_type, unsigned int sb_flags);
 
 int puscon_vfs_get_tree(puscon_fs_context* fc);
 

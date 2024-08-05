@@ -16,7 +16,7 @@
  * another superblock (referred to by @reference) is supplied, may have
  * parameters such as namespaces copied across from that superblock.
  */
-static puscon_fs_context* alloc_fs_context(puscon_file_system_type* fs_type,
+static puscon_fs_context* alloc_fs_context(puscon_context* context, puscon_file_system_type* fs_type,
 	puscon_dentry* reference, unsigned int sb_flags, unsigned int sb_flags_mask,
 	puscon_fs_context_purpose purpose) {
 	int (*init_fs_context) (puscon_fs_context*);
@@ -27,8 +27,9 @@ static puscon_fs_context* alloc_fs_context(puscon_file_system_type* fs_type,
 	if (!fc)
 		return ERR_PTR(-ENOMEM);
 
+	fc->context	= context;
 	fc->purpose	= purpose;
-	fc->fs_type	= puscon_get_filesystem(fs_type);
+	fc->fs_type	= puscon_get_filesystem(context, fs_type);
 
 	switch (purpose) {
 		case PUSCON_FS_CONTEXT_FOR_MOUNT:
@@ -52,8 +53,8 @@ err_fc:
 	return ERR_PTR(ret);
 }
 
-puscon_fs_context* puscon_fs_context_for_mount(puscon_file_system_type* fs_type, unsigned int sb_flags) {
-	return alloc_fs_context(fs_type, NULL, sb_flags, 0, PUSCON_FS_CONTEXT_FOR_MOUNT);
+puscon_fs_context* puscon_fs_context_for_mount(puscon_context* context, puscon_file_system_type* fs_type, unsigned int sb_flags) {
+	return alloc_fs_context(context, fs_type, NULL, sb_flags, 0, PUSCON_FS_CONTEXT_FOR_MOUNT);
 }
 
 /**
@@ -72,7 +73,7 @@ void puscon_put_fs_context(puscon_fs_context* fc) {
 	if (fc->need_free && fc->ops && fc->ops->free)
 		fc->ops->free(fc);
 
-	puscon_put_filesystem(fc->fs_type);
+	puscon_put_filesystem(fc->context, fc->fs_type);
 	if (fc->source)
 		puscon_kfree((void*) fc->source);
 	puscon_kfree(fc);

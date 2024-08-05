@@ -5,12 +5,7 @@ OBJS	:= start_${ARCH}.o main.o
 all: kernel
 
 kernel: link.ld ${OBJS}
-ifdef ANDROID
-	${CC} -pie -o $@ -nostdlib ${OBJS}
-else
-#	${LD} -static -pie --no-dynamic-linker -o $@ -T link.ld ${OBJS}
-	${CC} -pie -static -nostdlib -o $@ ${OBJS}
-endif
+	${CC} -pie -nostdlib -o $@ ${OBJS}
 
 %.o: %.s
 	${CC} ${CLAGS} -fPIC -o $@ -c $^

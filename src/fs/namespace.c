@@ -44,7 +44,7 @@ puscon_vfsmount* puscon_fc_mount(struct puscon_fs_context* fc) {
 	return ERR_PTR(err);
 }
 
-puscon_vfsmount* puscon_vfs_kern_mount(struct puscon_file_system_type* type, int flags, 
+puscon_vfsmount* puscon_vfs_kern_mount(puscon_context* context, struct puscon_file_system_type* type, int flags, 
 	const char* name, void* data) {
 	puscon_fs_context *fc;
 	puscon_vfsmount *mnt;
@@ -53,7 +53,7 @@ puscon_vfsmount* puscon_vfs_kern_mount(struct puscon_file_system_type* type, int
 	if (!type)
 		return ERR_PTR(-EINVAL);
 
-	fc = puscon_fs_context_for_mount(type, flags);
+	fc = puscon_fs_context_for_mount(context, type, flags);
 	if (IS_ERR(fc))
 		return ERR_CAST(fc);
 
@@ -79,7 +79,7 @@ static int init_mount_tree(puscon_context* context) {
 	puscon_mount *m;
 	puscon_path root;
 
-	mnt = puscon_vfs_kern_mount(&rootfs_fs_type, 0, "rootfs", NULL);
+	mnt = puscon_vfs_kern_mount(context, &rootfs_fs_type, 0, "rootfs", NULL);
 	if (IS_ERR(mnt)) {
 		puscon_printk(KERN_EMERG "Error: can't create rootfs.\n");
 		return 1;

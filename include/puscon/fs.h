@@ -167,8 +167,8 @@ void puscon_putname(puscon_filename* name);
 #define __putname(name)		puscon_kfree((void*) name)
 
 
-int puscon_register_filesystem(puscon_file_system_type*);
-int puscon_unregister_filesystem(puscon_file_system_type*);
+int puscon_register_filesystem(puscon_context*, puscon_file_system_type*);
+int puscon_unregister_filesystem(puscon_context*, puscon_file_system_type*);
 
 int puscon_generic_delete_inode(puscon_inode* inode);
 static inline int puscon_generic_drop_inode(puscon_inode* inode) {
@@ -179,12 +179,12 @@ void puscon___iget(puscon_inode* inode);
 void puscon_clear_inode(puscon_inode*);
 puscon_inode* puscon_new_inode(puscon_super_block* sb);
 
-puscon_file_system_type* puscon_get_filesystem(puscon_file_system_type* fs);
-void puscon_put_filesystem(puscon_file_system_type* fs);
+puscon_file_system_type* puscon_get_filesystem(puscon_context*, puscon_file_system_type* fs);
+void puscon_put_filesystem(puscon_context*, puscon_file_system_type* fs);
 
 int puscon_mnt_init(puscon_context* context);
 int puscon_ramfs_init_fs_context(struct puscon_fs_context* fc);
-int puscon_init_ramfs_fs(void);
-int puscon_bypass_fs_init(void);
+int puscon_init_ramfs_fs(struct puscon_context* context);
+int puscon_bypass_fs_init(struct puscon_context* context);
 
 #endif

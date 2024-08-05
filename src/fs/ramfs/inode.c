@@ -104,6 +104,6 @@ static puscon_file_system_type ramfs_fs_type = {
 	.kill_sb	= ramfs_kill_sb,
 };
 
-int puscon_init_ramfs_fs(void) {
-	return puscon_register_filesystem(&ramfs_fs_type);
+int puscon_init_ramfs_fs(puscon_context* context) {
+	return puscon_register_filesystem(context, &ramfs_fs_type);
 }

@@ -140,6 +140,14 @@ void puscon_putname(puscon_filename* name) {
 }
 
 
+struct nameidata {
+	puscon_path	path;
+	puscon_qstr	last;
+	puscon_path	root;
+	puscon_inode*	inode;
+};
+
+
 static puscon_dentry* filename_create(int dfd, puscon_filename* name, puscon_path* path, unsigned int lookup_flags) {
 	puscon_dentry *dentry = ERR_PTR(-EEXIST);
 	puscon_qstr last;
