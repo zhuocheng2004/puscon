@@ -19,19 +19,5 @@ typedef char			s8;
 typedef int			s32;
 typedef long long		s64;
 
-typedef unsigned int		mode_t;
-
-
-typedef struct list_head {
-	struct list_head *next, *prev;
-} list_head ;
-
-typedef struct hlist_head {
-	struct hlist_node *first;
-} hlist_head;
-
-typedef struct hlist_node {
-	struct hlist_node *next, **pprev;
-} hlist_node;
 
 #endif

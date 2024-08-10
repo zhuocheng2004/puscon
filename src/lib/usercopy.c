@@ -2,7 +2,7 @@
 #define _GNU_SOURCE
 #include <sys/uio.h>
 
-#include <puscon/uaccess.h>
+#include <puscon/puscon.h>
 
 
 unsigned long puscon_copy_from_user(puscon_context* context, void* to, const void __user* from, unsigned long n) {

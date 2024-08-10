@@ -4,7 +4,6 @@
 #include <sys/ptrace.h>
 #include <sys/user.h>
 
-#include <puscon/path.h>
 #include <puscon/types.h>
 #include <puscon/util.h>
 
@@ -20,12 +19,6 @@ typedef struct puscon_task_info {
 
 
 	u64		syscall_entry;
-
-	/* filesystem info */
-	struct {
-		puscon_path		pwd;
-		puscon_path		root;
-	}		fs;
 
 
 	/* 

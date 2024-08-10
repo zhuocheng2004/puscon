@@ -88,15 +88,6 @@ typedef struct puscon_context {
 	puscon_task_context	task_context;
 
 	int		should_stop;
-
-
-	/*
-	 * original global variables in Linux
-	 */
-
-	struct puscon_file_system_type* files_systems;
-
-	list_head		super_blocks;
 }  puscon_context;
 
 /*

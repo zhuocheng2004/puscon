@@ -9,18 +9,11 @@
 #include <unistd.h>
 
 #include <puscon/defs.h>
-#include <puscon/fs.h>
-#include <puscon/list.h>
 #include <puscon/puscon.h>
 #include <puscon/types.h>
 
 
 int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
-	context->files_systems = NULL;
-	INIT_LIST_HEAD(&context->super_blocks);
-
-	puscon_mnt_init(context);
-
 	return 0;
 }
 
