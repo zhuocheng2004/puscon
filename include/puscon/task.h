@@ -7,10 +7,15 @@
 #include <puscon/types.h>
 #include <puscon/util.h>
 
+struct puscon_context;
+
 /*
  * informational about each thread
  */
 typedef struct puscon_task_info {
+	/* puscon context reference */
+	struct puscon_context*	context;
+
 	/* virtual pid */
 	u32		pid;
 
@@ -38,8 +43,6 @@ typedef struct puscon_task_info {
  */
 typedef struct puscon_task_context {
 	puscon_task_info*	entry_task;
-
-	puscon_task_info*	current_task;
 
 	puscon_idmap	tasks;
 

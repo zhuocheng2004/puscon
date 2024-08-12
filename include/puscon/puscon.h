@@ -12,9 +12,6 @@
 #include <puscon/types.h>
 
 
-struct puscon_file_system_type;
-
-
 /*
  * Constant Definitions
  */
@@ -45,19 +42,6 @@ struct puscon_file_system_type;
 #define		KERN_INFO		KERN_SOH "6"
 #define		KERN_DEBUG		KERN_SOH "7"
 
-
-#define	S_IFMT		0170000	/* These bits determine file type.  */
-
-/* File types.  */
-#define	S_IFDIR		0040000	/* Directory.  */
-#define	S_IFCHR		0020000	/* Character device.  */
-#define	S_IFBLK		0060000	/* Block device.  */
-#define	S_IFREG		0100000	/* Regular file.  */
-#define	S_IFIFO		0010000	/* FIFO.  */
-#define	S_IFLNK		0120000	/* Symbolic link.  */
-#define	S_IFSOCK	0140000	/* Socket.  */
-
-#define PATH_MAX	4096
 
 
 /*
@@ -102,14 +86,14 @@ extern int puscon_printk_use_ansi_color;
 
 int puscon_main(puscon_config* config);
 
-int puscon_syscall_handle(puscon_context* context);
+int puscon_syscall_handle(puscon_task_info* task);
 
-int skip_syscall(puscon_context* context);
+int skip_syscall(puscon_task_info* task);
 
 /*
  * execute the syscall by the child task
  */
-int puscon_child_syscall6(puscon_context* context, u64* ret,
+int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5);
 
 int puscon_vprintk(const char *fmt, va_list args);

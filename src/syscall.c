@@ -13,9 +13,8 @@
 #include <puscon/types.h>
 #include <puscon/util.h>
 
-int skip_syscall(puscon_context* context) {
+int skip_syscall(puscon_task_info* task) {
 	//puscon_printk(KERN_DEBUG "skip_syscall enter.\n");
-	puscon_task_info *task = context->task_context.current_task;
 	pid_t child_pid = task->host_pid;
 
 	arch_regs regs;
@@ -55,10 +54,9 @@ int skip_syscall(puscon_context* context) {
  * We first make the child jump to the specified entry with arguments in registers (with regs saved), 
  * execute the syscall, get the result,and then return the child to the original position.
  */
-int puscon_child_syscall6(puscon_context* context, u64* ret,
+int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5) {
 
-	puscon_task_info *task = context->task_context.current_task;
 	pid_t host_pid = task->host_pid;
 
 	/* save regs */
@@ -144,10 +142,8 @@ int puscon_child_syscall6(puscon_context* context, u64* ret,
 	return 0;
 }
 
-int puscon_syscall_handle(puscon_context* context) {
+int puscon_syscall_handle(puscon_task_info* task) {
 	long err = 0;
-
-	puscon_task_info *task = context->task_context.current_task;
 
 	arch_regs regs;
 	err = regs_get(task->host_pid, &regs);
@@ -159,23 +155,23 @@ int puscon_syscall_handle(puscon_context* context) {
 
 	puscon_printk(KERN_DEBUG "[PID %d] Intercepted: SYSCALL = %lld, PC = 0x%llx \n", task->pid, syscall, regs_pc(&regs));
 
-	skip_syscall(context);
+	skip_syscall(task);
 
 	u64 a;
-	if (puscon_child_syscall6(context, &a, SYS_getpid, 0, 0, 0, 0, 0, 0)) {
+	if (puscon_child_syscall6(task, &a, SYS_getppid, 0, 0, 0, 0, 0, 0)) {
 		err = 1;
 		goto out;
 	}
-	puscon_printk(KERN_DEBUG "Yes: a = %lld \n", a);
+	puscon_printk(KERN_DEBUG "Yes: ppid = %lld \n", a);
 
 	if (syscall == SYS_exit) {
 		kill(task->host_pid, SIGKILL);
-		context->task_context.pid_map[task->host_pid] = 0;
-		puscon_idmap_free(&context->task_context.tasks, task->pid);
+		task->context->task_context.pid_map[task->host_pid] = 0;
+		puscon_idmap_free(&task->context->task_context.tasks, task->pid);
 		puscon_printk(KERN_INFO "Child [pid=%d, host_pid=%d] exited with status %d.\n", task->pid, task->host_pid, regs_arg0(&regs));
 
 		/* pid=0 is always occupied */
-		if (puscon_idmap_occupied(&context->task_context.tasks) == 1) {
+		if (puscon_idmap_occupied(&task->context->task_context.tasks) == 1) {
 			// no running children
 			err = 0;
 			goto out;
@@ -185,6 +181,6 @@ int puscon_syscall_handle(puscon_context* context) {
 	return 0;
 
 out:
-	context->should_stop = 1;
+	task->context->should_stop = 1;
 	return err;
 }

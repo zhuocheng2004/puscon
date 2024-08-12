@@ -47,6 +47,7 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 	// mark pid 0 as unusable
 	context->task_context.tasks.free_map[0] = 1;
 
+	entry_task->context = context;
 	entry_task->pid = 1;
 	context->task_context.entry_task = entry_task;
 	context->task_context.tasks.free_map[1] = 1;
@@ -140,12 +141,10 @@ int puscon_start(puscon_context* context) {
 	}
 	context->task_context.pid_map[child_pid] = 1;
 
-	context->task_context.current_task = entry_task;
-
 	context->should_stop = 0;
 
 	waitpid(child_pid, NULL, __WALL);
-	puscon_printk(KERN_INFO "Child [pid=1, host_pid=%d] is now under control.\n", child_pid);
+	puscon_printk(KERN_INFO "Child [pid=1, host_pid=%d] is now under control of parent [host_pid=%d].\n", child_pid, getpid());
 
 	long err = ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC);
 	if (err) {
@@ -240,22 +239,21 @@ int puscon_main(puscon_config* config) {
 					}
 
 					puscon_task_info *task = context.task_context.tasks.ptrs[pid];
-					context.task_context.current_task = task;
 
 					switch (syscall) {
 						case SYS_puscon_nop:
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						case SYS_puscon_kernel_enter:
 							puscon_printk(KERN_DEBUG "[PID %d] Entering kernel mode.\n", pid);
 							task->kernel = 1;
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						case SYS_puscon_kernel_exit:
 							puscon_printk(KERN_DEBUG "[PID %d] Exiting kernel mode.\n", pid);
 							task->kernel = 0;
 							task->bypass = 0;
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						case SYS_puscon_bypass_enable:
 							if (!task->kernel) {
@@ -265,25 +263,25 @@ int puscon_main(puscon_config* config) {
 							}
 							puscon_printk(KERN_DEBUG "[PID %d] Enabling bypassing.\n", pid);
 							task->bypass = 1;
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						case SYS_puscon_bypass_disable:
 							puscon_printk(KERN_DEBUG "[PID %d] Disabling bypassing.\n", pid);
 							task->bypass = 0;
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						case SYS_puscon_set_syscall_entry:
 							HAPPY_CLANG
 							u64 syscall_entry = regs_arg0(&regs);
 							puscon_printk(KERN_INFO "[PID %d] Syscall entry set to 0x%llx.\n", pid, syscall_entry);
 							task->syscall_entry = syscall_entry;
-							err = skip_syscall(&context);
+							err = skip_syscall(task);
 							break;
 						default:
 							if (task->kernel && task->bypass) {
 								puscon_printk(KERN_DEBUG "[PID %d] Bypassing: syscall %lld.\n", pid, syscall);
 							} else {
-								err = puscon_syscall_handle(&context);
+								err = puscon_syscall_handle(task);
 								if (err) {
 									puscon_printk(KERN_EMERG "[PID %d] Error: failed to handle syscall (nr=%lld).\n", pid, syscall);
 								}

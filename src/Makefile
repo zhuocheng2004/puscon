@@ -8,7 +8,7 @@ all: libpuscon.a ${SO_3} ${SO_1}
 include ${SRC_ROOT}/main_rules.mk
 
 OBJS	:= puscon.o syscall.o printk.o
-SUBDIRS	:= lib util
+SUBDIRS	:= util
 
 libpuscon.a: ${OBJS} $(call targets_subdir,${SUBDIRS})
 	${AR} rcs $@ $^
