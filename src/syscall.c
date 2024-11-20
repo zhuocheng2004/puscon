@@ -14,13 +14,13 @@
 #include <puscon/util.h>
 
 int skip_syscall(puscon_task_info* task) {
-	//puscon_printk(KERN_DEBUG "skip_syscall enter.\n");
+	//puscon_log(LOG_DEBUG "skip_syscall enter.\n");
 	pid_t child_pid = task->host_pid;
 
 	arch_regs regs;
 	long err = regs_get(child_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 		return 1;
 	}
 
@@ -28,22 +28,22 @@ int skip_syscall(puscon_task_info* task) {
 	// (not working) regs_syscall(&regs) = SYS_getpid;
 	err = syscall_nr_set(child_pid, &regs, SYS_getpid);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: syscall_nr_set failed.\n");
+		puscon_log(LOG_EMERG "Error: syscall_nr_set failed.\n");
 		return 1;
 	}
 	err = regs_set(child_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_set failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_set failed.\n");
 		return 1;
 	}
 
 	err = ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: PTRACE_SYSCALL failed.\n");
+		puscon_log(LOG_EMERG "Error: PTRACE_SYSCALL failed.\n");
 		return 1;
 	}
 	waitpid(child_pid, NULL, __WALL);
-	//puscon_printk(KERN_DEBUG "skip_syscall exit.\n");
+	//puscon_log(LOG_DEBUG "skip_syscall exit.\n");
 
 	return 0;
 }
@@ -52,7 +52,7 @@ int skip_syscall(puscon_task_info* task) {
  * This function will make a syscall be executed directly in child context.
  * 
  * We first make the child jump to the specified entry with arguments in registers (with regs saved), 
- * execute the syscall, get the result,and then return the child to the original position.
+ * execute the syscall, get the result, and then return the child to the original position.
  */
 int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5) {
@@ -63,7 +63,7 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	arch_regs regs_saved, regs;
 	long err = regs_get(host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 		return 1;
 	}
 	regs_saved = regs;
@@ -73,7 +73,7 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	regs_pc(&regs) = task->syscall_entry;
 	err = regs_set(host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_set failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_set failed.\n");
 		return 1;
 	}
 
@@ -81,24 +81,24 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	int child_status;
 	err = ptrace(PTRACE_SYSCALL, host_pid, NULL, NULL);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: PTRACE_SYSCALL failed.\n");
+		puscon_log(LOG_EMERG "Error: PTRACE_SYSCALL failed.\n");
 		return 1;
 	}
 	waitpid(host_pid, &child_status, __WALL);
 	if (!(WIFSTOPPED(child_status) && WSTOPSIG(child_status) == SIGTRAP)) {
-		puscon_printk(KERN_EMERG "[PID %d] Error: syscall entry call failed, sig=%d.\n", 
+		puscon_log(LOG_EMERG "[PID %d] Error: syscall entry call failed, sig=%d.\n", 
 			task->pid, WSTOPSIG(child_status));
 		return 1;
 	}
 	err = regs_get(host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 		return 1;
 	}
 	// (not working) regs_syscall(&regs) = nr;
 	err = syscall_nr_set(host_pid, &regs, nr);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: syscall_nr_set failed.\n");
+		puscon_log(LOG_EMERG "Error: syscall_nr_set failed.\n");
 		return 1;
 	}
 	regs_arg0(&regs) = arg0;
@@ -109,25 +109,25 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	regs_arg5(&regs) = arg5;
 	err = regs_set(host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_set failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_set failed.\n");
 		return 1;
 	}
 
 	/* syscall exit */
 	err = ptrace(PTRACE_SYSCALL, host_pid, NULL, NULL);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: PTRACE_SYSCALL failed.\n");
+		puscon_log(LOG_EMERG "Error: PTRACE_SYSCALL failed.\n");
 		return 1;
 	}
 	waitpid(host_pid, &child_status, __WALL);
 	if (!(WIFSTOPPED(child_status) && WSTOPSIG(child_status) == SIGTRAP)) {
-		puscon_printk(KERN_EMERG "[PID %d] Error: syscall entry call failed, sig=%d.\n", 
+		puscon_log(LOG_EMERG "[PID %d] Error: syscall entry call failed, sig=%d.\n", 
 			task->pid, WSTOPSIG(child_status));
 		return 1;
 	}
 	err = regs_get(host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 		return 1;
 	}
 	*ret = regs_ret(&regs);
@@ -135,7 +135,7 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	/* restore regs */
 	err = regs_set(host_pid, &regs_saved);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_set failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_set failed.\n");
 		return 1;
 	}
 
@@ -148,12 +148,12 @@ int puscon_syscall_handle(puscon_task_info* task) {
 	arch_regs regs;
 	err = regs_get(task->host_pid, &regs);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 		return 1;
 	}
 	unsigned long syscall = regs_syscall(&regs);
 
-	puscon_printk(KERN_DEBUG "[PID %d] Intercepted: SYSCALL = %lld, PC = 0x%llx \n", task->pid, syscall, regs_pc(&regs));
+	puscon_log(LOG_DEBUG "[PID %d] Intercepted: SYSCALL = %lld, PC = 0x%llx \n", task->pid, syscall, regs_pc(&regs));
 
 	skip_syscall(task);
 
@@ -162,13 +162,13 @@ int puscon_syscall_handle(puscon_task_info* task) {
 		err = 1;
 		goto out;
 	}
-	puscon_printk(KERN_DEBUG "Yes: ppid = %lld \n", a);
+	puscon_log(LOG_DEBUG "Yes: ppid = %lld \n", a);
 
 	if (syscall == SYS_exit) {
 		kill(task->host_pid, SIGKILL);
 		task->context->task_context.pid_map[task->host_pid] = 0;
 		puscon_idmap_free(&task->context->task_context.tasks, task->pid);
-		puscon_printk(KERN_INFO "Child [pid=%d, host_pid=%d] exited with status %d.\n", task->pid, task->host_pid, regs_arg0(&regs));
+		puscon_log(LOG_INFO "Child [pid=%d, host_pid=%d] exited with status %d.\n", task->pid, task->host_pid, regs_arg0(&regs));
 
 		/* pid=0 is always occupied */
 		if (puscon_idmap_occupied(&task->context->task_context.tasks) == 1) {

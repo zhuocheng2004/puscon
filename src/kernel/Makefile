@@ -4,8 +4,8 @@ OBJS	:= start_${ARCH}.o main.o
 .PHONY: all
 all: kernel
 
-kernel: link.ld ${OBJS}
-	${CC} -pie -nostdlib -o $@ ${OBJS}
+kernel: ${OBJS}
+	${CC} -pie -nostdlib -Wl,-z -Wl,noexecstack -o $@ ${OBJS}
 
 %.o: %.s
 	${CC} ${CLAGS} -fPIC -o $@ -c $^

@@ -14,7 +14,7 @@ static void usage(const char* prog_name) {
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "    --ansi-color        output logs with ansi colors for different levels.\n");
 	fprintf(stderr, "    --help              print this help message.\n");
-	fprintf(stderr, "    --level <level>     only output logs with level <= the level specified (0: fatal ... 7: debug).\n");
+	fprintf(stderr, "    --log-level <level> only output logs with level <= the level specified (0: fatal ... 7: debug).\n");
 	fprintf(stderr, "    --version           print version.\n");
 }
 
@@ -35,15 +35,15 @@ static int parse_options(puscon_config* config, int argc, char *argv[]) {
 				s = argv[pos];
 				goto normal;
 			} else if (strcmp(s, "--ansi-color") == 0) {
-				puscon_printk_use_ansi_color = 1;
+				puscon_log_use_ansi_color = 1;
 			} else if (strcmp(s, "--help") == 0) {
 				usage(argv[0]);
 				exit(0);
-			} else if (strcmp(s, "--level") == 0) {
+			} else if (strcmp(s, "--log-level") == 0) {
 				pos++;
 				s = argv[pos];
 				if (!s) {
-					fprintf(stderr, "Error: --level requires one argument. \n");
+					fprintf(stderr, "Error: --log-level requires one argument. \n");
 					return 1;
 				}
 				int level = atoi(s);
@@ -51,7 +51,7 @@ static int parse_options(puscon_config* config, int argc, char *argv[]) {
 					fprintf(stderr, "Error: invalid level %s, which should be one of 0 ... 7.\n", s);
 					return 1;
 				}
-				puscon_printk_level = level;
+				puscon_log_level = level;
 			} else if (strcmp(s, "--version") == 0) {
 				version();
 				exit(0);
@@ -89,8 +89,8 @@ static int parse_options(puscon_config* config, int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	/* global setup */
-	puscon_printk_use_ansi_color = 0;
-	puscon_printk_level = 0;
+	puscon_log_use_ansi_color = 0;
+	puscon_log_level = 0;
 
 	/* parse options */
 	puscon_config config;

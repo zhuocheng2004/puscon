@@ -32,7 +32,7 @@ clean:
 
 .PHONY: run
 run: puscon-cli kernel
-	LD_LIBRARY_PATH=${SRC_ROOT}/src/:${LD_LIBRARY_PATH} ./src/main/puscon --ansi-color --level 7 ./src/kernel/kernel ./test/test_load_static.elf
+	LD_LIBRARY_PATH=${SRC_ROOT}/src/:${LD_LIBRARY_PATH} ./src/main/puscon --ansi-color --log-level 7 ./src/kernel/kernel ./test/test_load_static.elf
 
 .PHONY: FORCE
 FORCE:

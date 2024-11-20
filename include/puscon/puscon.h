@@ -28,19 +28,19 @@
 #define		HOST_PID_MAX_SHIFT	22
 #define		PID_MAX_SHIFT		16
 
-#define		PRINTK_BUF_SIZE		4096
+#define		LOG_BUF_SIZE		4096
 
-#define		KERN_SOH		"\001"
-#define		KERN_SOH_ASCII		'\001'
+#define		LOG_SOH			"\001"
+#define		LOG_SOH_ASCII		'\001'
 
-#define		KERN_EMERG		KERN_SOH "0"
-#define		KERN_ALERT		KERN_SOH "1"
-#define		KERN_CRIT		KERN_SOH "2"
-#define		KERN_ERR		KERN_SOH "3"
-#define		KERN_WARNING		KERN_SOH "4"
-#define		KERN_NOTICE		KERN_SOH "5"
-#define		KERN_INFO		KERN_SOH "6"
-#define		KERN_DEBUG		KERN_SOH "7"
+#define		LOG_EMERG		LOG_SOH "0"
+#define		LOG_ALERT		LOG_SOH "1"
+#define		LOG_CRIT		LOG_SOH "2"
+#define		LOG_ERR			LOG_SOH "3"
+#define		LOG_WARNING		LOG_SOH "4"
+#define		LOG_NOTICE		LOG_SOH "5"
+#define		LOG_INFO		LOG_SOH "6"
+#define		LOG_DEBUG		LOG_SOH "7"
 
 
 
@@ -77,8 +77,8 @@ typedef struct puscon_context {
 /*
  * Global Variables
  */
-extern int puscon_printk_level;
-extern int puscon_printk_use_ansi_color;
+extern int puscon_log_level;
+extern int puscon_log_use_ansi_color;
 
 /*
  * Function Declarations
@@ -96,18 +96,18 @@ int skip_syscall(puscon_task_info* task);
 int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 	u64 nr, u64 arg0, u64 arg1, u64 arg2, u64 arg3, u64 arg4, u64 arg5);
 
-int puscon_vprintk(const char *fmt, va_list args);
-int puscon_printk(const char *fmt, ...);
+int puscon_vlog(const char *fmt, va_list args);
+int puscon_log(const char *fmt, ...);
 
-static inline void* puscon_kmalloc(size_t size) {
+static inline void* puscon_malloc(size_t size) {
 	return malloc(size);
 }
 
-static inline void* puscon_kzalloc(size_t size) {
+static inline void* puscon_zalloc(size_t size) {
 	return calloc(1, size);
 }
 
-static inline void puscon_kfree(void* ptr) {
+static inline void puscon_free(void* ptr) {
 	free(ptr);
 }
 

@@ -6,20 +6,20 @@
 
 #include <puscon/puscon.h>
 
-int puscon_printk_level;
+int puscon_log_level;
 
-int puscon_printk_use_ansi_color = 0;
+int puscon_log_use_ansi_color = 0;
 
-static char log_buf[PRINTK_BUF_SIZE];
+static char log_buf[LOG_BUF_SIZE];
 
 
-int puscon_vprintk(const char *fmt, va_list args) {
-	int n = vsnprintf(log_buf, PRINTK_BUF_SIZE - 1, fmt, args);
+int puscon_vlog(const char *fmt, va_list args) {
+	int n = vsnprintf(log_buf, LOG_BUF_SIZE - 1, fmt, args);
 	log_buf[n] = '\0';
 
 	char *buf = log_buf;
 	int log_level = -1;
-	if (log_buf[0] == KERN_SOH_ASCII) {
+	if (log_buf[0] == LOG_SOH_ASCII) {
 		buf++;
 		if ('0' <= log_buf[1] && log_buf[1] <= '7') {
 			log_level = log_buf[1] - '0';
@@ -27,8 +27,8 @@ int puscon_vprintk(const char *fmt, va_list args) {
 		}
 	}
 
-	if (log_level <= puscon_printk_level) {
-		if (puscon_printk_use_ansi_color) {
+	if (log_level <= puscon_log_level) {
+		if (puscon_log_use_ansi_color) {
 			switch (log_level) {
 				case 0:
 				case 1:
@@ -54,7 +54,7 @@ int puscon_vprintk(const char *fmt, va_list args) {
 
 		fputs(buf, stderr);
 
-		if (puscon_printk_use_ansi_color) {
+		if (puscon_log_use_ansi_color) {
 			fputs("\033[0m", stderr);
 		}
 	}
@@ -62,12 +62,12 @@ int puscon_vprintk(const char *fmt, va_list args) {
 	return n;
 }
 
-int puscon_printk(const char *fmt, ...) {
+int puscon_log(const char *fmt, ...) {
 	va_list args;
 	int n;
 
 	va_start(args, fmt);
-	n = puscon_vprintk(fmt, args);
+	n = puscon_vlog(fmt, args);
 	va_end(args);
 
 	return n;

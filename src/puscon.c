@@ -19,24 +19,24 @@ int puscon_context_init_fs(puscon_context* context, puscon_config* config) {
 
 int puscon_context_init(puscon_context* context, puscon_config* config) {
 	if (!context) {
-		puscon_printk(KERN_EMERG "Error: bad context.\n");
+		puscon_log(LOG_EMERG "Error: bad context.\n");
 		goto err_out;
 	}
 
 	if (!config) {
-		puscon_printk(KERN_EMERG "Error: bad config.\n");
+		puscon_log(LOG_EMERG "Error: bad config.\n");
 		goto err_out;
 	}
 
 	context->config = config;
 
 	if (puscon_idmap_init(&context->task_context.tasks, PID_MAX_SHIFT)) {
-		puscon_printk(KERN_EMERG "Error: failed to init idmap \"tasks\".\n");
+		puscon_log(LOG_EMERG "Error: failed to init idmap \"tasks\".\n");
 		goto err_out;
 	}
 
 	if (!(context->task_context.pid_map = calloc(1 << HOST_PID_MAX_SHIFT, 4))) {
-		puscon_printk(KERN_EMERG "Error: failed to alloc pid_map.\n");
+		puscon_log(LOG_EMERG "Error: failed to alloc pid_map.\n");
 		goto err_destroy_tasks;
 	}
 
@@ -56,7 +56,7 @@ int puscon_context_init(puscon_context* context, puscon_config* config) {
 	context->should_stop = 1;
 
 	if (puscon_context_init_fs(context, config)) {
-		puscon_printk(KERN_EMERG "ERROR: failed to init filesystem.\n");
+		puscon_log(LOG_EMERG "ERROR: failed to init filesystem.\n");
 		goto err_free_pidmap;
 	}
 
@@ -72,7 +72,7 @@ err_out:
 
 int puscon_context_destroy(puscon_context* context) {
 	if (!context) {
-		puscon_printk(KERN_EMERG "Error: bad context.\n");
+		puscon_log(LOG_EMERG "Error: bad context.\n");
 		return 1;
 	}
 
@@ -89,20 +89,20 @@ int puscon_context_destroy(puscon_context* context) {
 
 int puscon_start(puscon_context* context) {
 	if (!context || !context->config) {
-		puscon_printk(KERN_EMERG "Error: bad context.\n");
+		puscon_log(LOG_EMERG "Error: bad context.\n");
 		return 1;
 	}
 	puscon_config *config = context->config;
 
 	if (!config->kernel_filename) {
-		puscon_printk(KERN_EMERG "Error: no kernel specified.\n");
+		puscon_log(LOG_EMERG "Error: no kernel specified.\n");
 		return 1;
 	}
 
 	pid_t child_pid = fork();
 
 	if (child_pid < 0) {
-		puscon_printk(KERN_EMERG "Error: failed to fork process when trying to exec.\n");
+		puscon_log(LOG_EMERG "Error: failed to fork process when trying to exec.\n");
 		return 1;
 	}
 
@@ -118,13 +118,13 @@ int puscon_start(puscon_context* context) {
 
 		long err = ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 		if (err) {
-			puscon_printk(KERN_EMERG "Error: PTRACE_TRACEME failed.\n");
+			puscon_log(LOG_EMERG "Error: PTRACE_TRACEME failed.\n");
 			exit(1);
 		}
 		raise(SIGSTOP);
 		err = execve(config->kernel_filename, argv, NULL);
 		if (err) {
-			puscon_printk(KERN_EMERG "Error: failed to exec %s.\n", config->kernel_filename);
+			puscon_log(LOG_EMERG "Error: failed to exec %s.\n", config->kernel_filename);
 		}
 		exit(1);
 	}
@@ -136,7 +136,7 @@ int puscon_start(puscon_context* context) {
 	entry_task->kernel = 1;
 	entry_task->bypass = 1;
 	if (child_pid >= (1 << HOST_PID_MAX_SHIFT)) {
-		puscon_printk(KERN_EMERG "Error: host pid %d is too large (max: %d).\n", child_pid, (1 << HOST_PID_MAX_SHIFT) - 1);
+		puscon_log(LOG_EMERG "Error: host pid %d is too large (max: %d).\n", child_pid, (1 << HOST_PID_MAX_SHIFT) - 1);
 		return 1;
 	}
 	context->task_context.pid_map[child_pid] = 1;
@@ -144,17 +144,17 @@ int puscon_start(puscon_context* context) {
 	context->should_stop = 0;
 
 	waitpid(child_pid, NULL, __WALL);
-	puscon_printk(KERN_INFO "Child [pid=1, host_pid=%d] is now under control of parent [host_pid=%d].\n", child_pid, getpid());
+	puscon_log(LOG_INFO "Child [pid=1, host_pid=%d] is now under control of parent [host_pid=%d].\n", child_pid, getpid());
 
 	long err = ptrace(PTRACE_SETOPTIONS, child_pid, NULL, PTRACE_O_EXITKILL | PTRACE_O_TRACEEXEC);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: PTRACE_SETOPTIONS failed.\n");
+		puscon_log(LOG_EMERG "Error: PTRACE_SETOPTIONS failed.\n");
 		return 1;
 	}
 
 	err = ptrace(PTRACE_SYSCALL, child_pid, NULL, NULL);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: PTRACE_SYSCALL failed.\n");
+		puscon_log(LOG_EMERG "Error: PTRACE_SYSCALL failed.\n");
 		return 1;
 	}
 
@@ -192,17 +192,17 @@ int puscon_main(puscon_config* config) {
 	puscon_context context;
 	err = puscon_context_init(&context, config);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: failed to init context.\n");
+		puscon_log(LOG_EMERG "Error: failed to init context.\n");
 		return err;
 	}
 
 	char* arg_str = get_args_string(config->entry_argc, config->entry_argv);
-	puscon_printk(KERN_INFO "Starting Puscon with kernel=\"%s\", entry=\"%s\", args=[%s].\n", config->kernel_filename, config->entry_filename, arg_str ? arg_str : "");
+	puscon_log(LOG_INFO "Starting Puscon with kernel=\"%s\", entry=\"%s\", args=[%s].\n", config->kernel_filename, config->entry_filename, arg_str ? arg_str : "");
 	free(arg_str);
 
 	err = puscon_start(&context);
 	if (err) {
-		puscon_printk(KERN_EMERG "Error: failed to start process.\n");
+		puscon_log(LOG_EMERG "Error: failed to start process.\n");
 		return err;
 	}
 
@@ -226,14 +226,14 @@ int puscon_main(puscon_config* config) {
 					arch_regs regs;
 					err = regs_get(child_pid, &regs);
 					if (err) {
-						puscon_printk(KERN_EMERG "Error: regs_get failed.\n");
+						puscon_log(LOG_EMERG "Error: regs_get failed.\n");
 						break;
 					}
 					unsigned long syscall = regs_syscall(&regs);
 
 					u32 pid = context.task_context.pid_map[child_pid];
 					if (pid == 0) {
-						puscon_printk(KERN_EMERG "Error: cannot find child with host pid %d.\n", child_pid);
+						puscon_log(LOG_EMERG "Error: cannot find child with host pid %d.\n", child_pid);
 						err = 1;
 						break;
 					}
@@ -245,45 +245,45 @@ int puscon_main(puscon_config* config) {
 							err = skip_syscall(task);
 							break;
 						case SYS_puscon_kernel_enter:
-							puscon_printk(KERN_DEBUG "[PID %d] Entering kernel mode.\n", pid);
+							puscon_log(LOG_DEBUG "[PID %d] Entering kernel mode.\n", pid);
 							task->kernel = 1;
 							err = skip_syscall(task);
 							break;
 						case SYS_puscon_kernel_exit:
-							puscon_printk(KERN_DEBUG "[PID %d] Exiting kernel mode.\n", pid);
+							puscon_log(LOG_DEBUG "[PID %d] Exiting kernel mode.\n", pid);
 							task->kernel = 0;
 							task->bypass = 0;
 							err = skip_syscall(task);
 							break;
 						case SYS_puscon_bypass_enable:
 							if (!task->kernel) {
-								puscon_printk(KERN_EMERG "[PID %d] Error: can only bypass in kernel mode.\n", pid);
+								puscon_log(LOG_EMERG "[PID %d] Error: can only bypass in kernel mode.\n", pid);
 								err = 1;
 								break;
 							}
-							puscon_printk(KERN_DEBUG "[PID %d] Enabling bypassing.\n", pid);
+							puscon_log(LOG_DEBUG "[PID %d] Enabling bypassing.\n", pid);
 							task->bypass = 1;
 							err = skip_syscall(task);
 							break;
 						case SYS_puscon_bypass_disable:
-							puscon_printk(KERN_DEBUG "[PID %d] Disabling bypassing.\n", pid);
+							puscon_log(LOG_DEBUG "[PID %d] Disabling bypassing.\n", pid);
 							task->bypass = 0;
 							err = skip_syscall(task);
 							break;
 						case SYS_puscon_set_syscall_entry:
 							HAPPY_CLANG
 							u64 syscall_entry = regs_arg0(&regs);
-							puscon_printk(KERN_INFO "[PID %d] Syscall entry set to 0x%llx.\n", pid, syscall_entry);
+							puscon_log(LOG_INFO "[PID %d] Syscall entry set to 0x%llx.\n", pid, syscall_entry);
 							task->syscall_entry = syscall_entry;
 							err = skip_syscall(task);
 							break;
 						default:
 							if (task->kernel && task->bypass) {
-								puscon_printk(KERN_DEBUG "[PID %d] Bypassing: syscall %lld.\n", pid, syscall);
+								puscon_log(LOG_DEBUG "[PID %d] Bypassing: syscall %lld.\n", pid, syscall);
 							} else {
 								err = puscon_syscall_handle(task);
 								if (err) {
-									puscon_printk(KERN_EMERG "[PID %d] Error: failed to handle syscall (nr=%lld).\n", pid, syscall);
+									puscon_log(LOG_EMERG "[PID %d] Error: failed to handle syscall (nr=%lld).\n", pid, syscall);
 								}
 							}
 					}
@@ -292,11 +292,11 @@ int puscon_main(puscon_config* config) {
 					}
 					break;
 				case SIGSEGV:
-					puscon_printk(KERN_EMERG "[PID %d] Error: child (host_pid=%d) Segmentation Fault.\n", pid, child_pid);
+					puscon_log(LOG_EMERG "[PID %d] Error: child (host_pid=%d) Segmentation Fault.\n", pid, child_pid);
 					err = 1;
 					break;
 				default:
-					puscon_printk(KERN_EMERG "[PID %d] Error: unhandled signal: %d \n", pid, sig);
+					puscon_log(LOG_EMERG "[PID %d] Error: unhandled signal: %d \n", pid, sig);
 					err = 1;
 			}
 
@@ -304,7 +304,7 @@ int puscon_main(puscon_config* config) {
 				break;
 			}
 		} else {
-			puscon_printk(KERN_EMERG "Unhandled signal status %d from child %d.\n", child_status, child_pid);
+			puscon_log(LOG_EMERG "Unhandled signal status %d from child %d.\n", child_status, child_pid);
 			err = 1;
 			break;
 		}
@@ -312,7 +312,7 @@ int puscon_main(puscon_config* config) {
 
 	puscon_context_destroy(&context);
 
-	puscon_printk(KERN_INFO "Puscon Exited.\n");
+	puscon_log(LOG_INFO "Puscon Exited.\n");
 
 	return err;
 }

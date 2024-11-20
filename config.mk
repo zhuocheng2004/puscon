@@ -1,4 +1,9 @@
 
+SRC_ROOT	= ${PWD}
+
+export SRC_ROOT
+
+
 PUSCON_VERSION_MAJOR	:= 0
 PUSCON_VERSION_MINOR	:= 0
 PUSCON_VERSION_PATCH	:= 0
@@ -15,7 +20,7 @@ AR		?= ar
 CC		?= cc
 LD		?= ld
 
-export	CC LD
+export AR CC LD
 
 
 CFLAGS	+= -I${PWD}/include/ -I${PWD}/include/arch/${ARCH}/ -fPIC -Wall -Wno-unused
@@ -29,8 +34,3 @@ CFLAGS	+= -D__android__
 endif
 
 export	CFLAGS
-
-
-SRC_ROOT	= ${PWD}
-
-export SRC_ROOT
