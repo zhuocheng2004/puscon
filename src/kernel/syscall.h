@@ -1,7 +1,7 @@
 #ifndef PUSCON_KERNEL_SYSCALL_H
 #define PUSCON_KERNEL_SYSCALL_H
 
-#include <puscon/puscon.h>
+#include <puscon/defs.h>
 #include <puscon/types.h>
 
 #include "arch_syscall.h"

@@ -125,12 +125,15 @@ int puscon_child_syscall6(puscon_task_info* task, u64* ret,
 			task->pid, WSTOPSIG(child_status));
 		return 1;
 	}
-	err = regs_get(host_pid, &regs);
-	if (err) {
-		puscon_log(LOG_EMERG "Error: regs_get failed.\n");
-		return 1;
+
+	if (ret) {
+		err = regs_get(host_pid, &regs);
+		if (err) {
+			puscon_log(LOG_EMERG "Error: regs_get failed.\n");
+			return 1;
+		}
+		*ret = regs_ret(&regs);
 	}
-	*ret = regs_ret(&regs);
 
 	/* restore regs */
 	err = regs_set(host_pid, &regs_saved);
@@ -164,11 +167,12 @@ int puscon_syscall_handle(puscon_task_info* task) {
 	}
 	puscon_log(LOG_DEBUG "Yes: ppid = %lld \n", a);
 
-	if (syscall == SYS_exit) {
+	if (syscall == SYS_exit || syscall == SYS_exit_group) {
+		u64 status = regs_arg0(&regs);
 		kill(task->host_pid, SIGKILL);
 		task->context->task_context.pid_map[task->host_pid] = 0;
 		puscon_idmap_free(&task->context->task_context.tasks, task->pid);
-		puscon_log(LOG_INFO "Child [pid=%d, host_pid=%d] exited with status %d.\n", task->pid, task->host_pid, regs_arg0(&regs));
+		puscon_log(LOG_INFO "Child [pid=%d, host_pid=%d] exited with status %d.\n", task->pid, task->host_pid, status);
 
 		/* pid=0 is always occupied */
 		if (puscon_idmap_occupied(&task->context->task_context.tasks) == 1) {

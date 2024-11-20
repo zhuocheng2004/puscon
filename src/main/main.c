@@ -10,16 +10,20 @@
 static void usage(const char* prog_name) {
 	if (!prog_name)
 		prog_name = "puscon-cli";
-	fprintf(stderr, "Usage: %s [options] <kernel_filename> <entry_name>\n", prog_name);
-	fprintf(stderr, "Options:\n");
-	fprintf(stderr, "    --ansi-color        output logs with ansi colors for different levels.\n");
-	fprintf(stderr, "    --help              print this help message.\n");
-	fprintf(stderr, "    --log-level <level> only output logs with level <= the level specified (0: fatal ... 7: debug).\n");
-	fprintf(stderr, "    --version           print version.\n");
+	printf("Usage: %s [options] <kernel_filename> <entry_name>\n", prog_name);
+	printf("Options:\n");
+	printf("    --ansi-color        output logs with ansi colors for different levels.\n");
+	printf("    --help              print this help message.\n");
+	printf("    --log-level <level> only output logs with level <= the level specified (0: fatal ... 7: debug).\n");
+	printf("    --version           print version.\n");
 }
 
 static void version() {
-	fprintf(stderr, "puscon " PUSCON_VERSION_STRING "\n");
+	puts("puscon " PUSCON_VERSION_STRING);
+	puts("Copyright (C) 2024 Zhuo Cheng");
+	puts("This program is free software.");
+	puts("You should have received a copy of the GNU General Public License");
+	puts("along with this program.  If not, see <https://www.gnu.org/licenses/>.");
 }
 
 static int parse_options(puscon_config* config, int argc, char *argv[]) {
